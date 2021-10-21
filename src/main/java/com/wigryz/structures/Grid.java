@@ -45,7 +45,6 @@ public class Grid {
                 nodes.add(new Node(id++, x, y));
             }
         }
-        nodes.forEach(System.out::println);
     }
 
     private void createElement() {
@@ -58,7 +57,5 @@ public class Grid {
                 continue;
             elements.add(new Element(id++, n, id2, id3, id4));
         }
-
-        elements.forEach(System.out::println);
     }
 }
