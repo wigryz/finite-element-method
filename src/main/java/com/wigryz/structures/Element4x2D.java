@@ -2,7 +2,6 @@ package com.wigryz.structures;
 
 import com.wigryz.algorithms.IntegralScheme;
 import lombok.Data;
-import lombok.ToString;
 
 import java.util.Arrays;
 
@@ -12,12 +11,12 @@ public class Element4x2D {
     private final double coord = 1d/Math.sqrt(3);
     private double[][] etaArray;
     private double[][] ksiArray;
-    private int numberOfNodes;
+    private int numberOfPoints;
 
     public Element4x2D(IntegralScheme integralScheme) {
-        numberOfNodes = (int)Math.pow(integralScheme.getK().size(), 2);
-        this.etaArray = new double[4][numberOfNodes];
-        this.ksiArray = new double[4][numberOfNodes];
+        numberOfPoints = (int)Math.pow(integralScheme.getK().size(), 2);
+        this.etaArray = new double[4][numberOfPoints];
+        this.ksiArray = new double[4][numberOfPoints];
         fillArrays();
     }
 
@@ -68,3 +67,7 @@ public class Element4x2D {
             '}';
     }
 }
+
+/*
+    FUNKCJE KSZTAŁTU W PUNKTACH CAŁKOWANIA
+ */

@@ -1,10 +1,12 @@
 package com.wigryz.structures;
 
+import com.wigryz.algorithms.Algorithms;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Getter
@@ -13,8 +15,8 @@ import java.util.List;
 public class Grid {
     private double h; //height of table
     private double b; //width of table
-    private int nH;  //number of elements on height
-    private int nB; //number of elements on width
+    private int nH;  //number of nodes on height
+    private int nB; //number of nodes on width
     private int nN; //number of nodes
     private int nE; //number of elements
     private List<Node> nodes;
@@ -49,13 +51,24 @@ public class Grid {
 
     private void createElement() {
         int id = 1;
-        for (int n = 1 ; n +nH + 1 <= nN ; n++) {
+        for (int n = 1; n + nH + 1 <= nN; n++) {
             int id2 = n + nH;
             int id3 = id2 + 1;
             int id4 = n + 1;
-            if((n % nH) == 0)
+            if ((n % nH) == 0)
                 continue;
             elements.add(new Element(id++, n, id2, id3, id4));
+        }
+    }
+
+    public void calculate(Element4x2D element) {
+        for (int i = 0; i < getNE(); i++) {
+            for (int j = 0; j < element.getNumberOfPoints(); j++) {
+                double[][] J = new double[2][2];
+                double[][] JInv = new double[2][2];
+                Algorithms.jacobian(i, j, J, JInv, element, this);
+                System.out.println(Arrays.deepToString(JInv).replace("], ", "]\n"));
+            }
         }
     }
 }
