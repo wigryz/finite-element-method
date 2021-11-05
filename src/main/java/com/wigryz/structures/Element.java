@@ -15,6 +15,8 @@ public class Element {
 
     private int id;
     private List<Integer> idList;
+    private double[][] H;
+
 
     public Element(int id, int id1, int id2, int id3, int id4) {
         this.id = id;

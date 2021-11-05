@@ -63,6 +63,11 @@ public class Algorithms {
         }
         double det = J[0][0] * J[1][1] - J[1][0] * J[0][1];
 
+        JInv[0][0] = J[1][1];
+        JInv[0][1] = -J[0][1];
+        JInv[1][0] = -J[1][0];
+        JInv[1][1] = J[0][0];
+
         for(int k=0 ; k < J.length; k++)
             for(int h=0 ; h < J[0].length ; h++)
                 JInv[k][h] = 1d/det * J[k][h];
