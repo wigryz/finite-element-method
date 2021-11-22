@@ -1,10 +1,12 @@
 package com.wigryz;
 
-import com.wigryz.algorithms.IntegralScheme;
+import com.wigryz.algorithms.Algorithms;
+import com.wigryz.algorithms.IntegrationScheme;
 import com.wigryz.structures.Element4x2D;
 import com.wigryz.structures.Grid;
-import org.apache.commons.math3.linear.Array2DRowRealMatrix;
-import org.apache.commons.math3.linear.RealMatrix;
+import com.wigryz.structures.Side;
+
+import java.util.Arrays;
 
 public class Application {
 
@@ -17,8 +19,18 @@ public class Application {
 //        System.out.println(Algorithms.gauss2D(function2, IntegralScheme.INTEGRAL_SCHEME_1N));
 //        System.out.println(Algorithms.gauss2D(function2, IntegralScheme.INTEGRAL_SCHEME_2N));
 
-        Element4x2D element4x2D = new Element4x2D(IntegralScheme.INTEGRAL_SCHEME_1N);
-//        System.out.println(element4x2D);
+        Element4x2D element4x2D = new Element4x2D(IntegrationScheme.INTEGRATION_SCHEME_1N);
+//
+//        for (int i = 0; i < 4; i++) {
+//            System.out.println("\nSide: " + i + "\n");
+//            double[][] result = Algorithms.calculateHBC(0.0125, 25, (short) i, element4x2D);
+//            System.out.println(Arrays.deepToString(result).replace("], ", "]\n"));
+//        }
+//
+//        Side sideLeft = new Side(IntegrationScheme.INTEGRATION_SCHEME_1N, Side.LEFT);
+//        Side sideBottom = new Side(IntegrationScheme.INTEGRATION_SCHEME_1N, Side.BOTTOM);
+//        Side sideRight = new Side(IntegrationScheme.INTEGRATION_SCHEME_1N, Side.RIGHT);
+//        Side sideTop = new Side(IntegrationScheme.INTEGRATION_SCHEME_1N, Side.TOP);
 
         Grid grid = new Grid(0.025, 0.025, 2, 2);
         grid.calculate(element4x2D);

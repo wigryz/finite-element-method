@@ -4,8 +4,6 @@ import com.wigryz.algorithms.Algorithms;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
-import org.apache.commons.math3.linear.Array2DRowRealMatrix;
-import org.apache.commons.math3.linear.RealMatrix;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,7 +44,10 @@ public class Grid {
         int id = 1;
         for (double x = 0; x <= b; x += dx) {
             for (double y = 0; y <= h; y += dy) {
-                nodes.add(new Node(id++, x, y));
+                short bc = 0;
+                if(x == 0 || x == b || y == 0 || y == h)
+                    bc = 1;
+                nodes.add(new Node(id++, x, y, bc));
             }
         }
     }
@@ -66,46 +67,28 @@ public class Grid {
     public void calculate(Element4x2D element) {
         for (int i = 0; i < getNE(); i++) {
             double[][] H = new double[4][4];
+            double[][] Hbc = new double[4][4];
             for (int j = 0; j < element.getNumberOfPoints(); j++) {
                 double[][] J = new double[2][2];
                 double[][] JInv = new double[2][2];
                 Algorithms.jacobian(i, j, J, JInv, element, this);
-//                System.out.println(Arrays.deepToString(J).replace("], ", "]\n"));
-//                System.out.println(Arrays.deepToString(JInv).replace("], ", "]\n"));
-                double[][] HOfIntegralPoint = calculateH(JInv, j, element);
-                System.out.println(Arrays.deepToString(HOfIntegralPoint).replace("], ", "]\n") + "\n");
+                double[][] HOfIntegralPoint = Algorithms.calculateHOfIntPoint(JInv, j, element);
                 for(int g=0 ; g < H.length ; g++) {
                     for (int h=0 ; h < H[g].length ; h++) {
                         H[h][g] += HOfIntegralPoint[h][g];
                     }
                 }
             }
+            Hbc = Algorithms.calculateHBC(this, i, 25, element);
             getElements().get(i).setH(H);
+            getElements().get(i).setHbc(Hbc);
             System.out.println(Arrays.deepToString(H).replace("], ", "]\n"));
         }
     }
-
-    public double[][] calculateH(double[][] JInv, int i, Element4x2D element) {
-        double k_t = 30.0;
-        double dV = 0.000156;
-        double[] xArray = new double[4];
-        double[] yArray = new double[4];
-
-        double[][] etaArray = element.getEtaArray();
-        double[][] ksiArray = element.getKsiArray();
-
-        for (int j = 0; j < element.getNumberOfPoints(); j++) {
-            xArray[j] += JInv[0][0] * ksiArray[i][j];
-            xArray[j] += JInv[0][1] * etaArray[i][j];
-
-            yArray[j] += JInv[1][0] * ksiArray[i][j];
-            yArray[j] += JInv[1][1] * etaArray[i][j];
-        }
-        //cos nie dziala z obliczaniem macierzy H dla kolejnych punktów całkowania
-        RealMatrix xMatrix = new Array2DRowRealMatrix(xArray);
-        RealMatrix resultX = xMatrix.multiply(xMatrix.transpose());
-        RealMatrix yMatrix = new Array2DRowRealMatrix(yArray);
-        RealMatrix resultY = yMatrix.multiply(yMatrix.transpose());
-        return resultX.add(resultY).scalarMultiply(k_t).scalarMultiply(dV).getData();
-    }
 }
+
+/*
+System.out.println(Arrays.deepToString(J).replace("], ", "]\n"));
+System.out.println(Arrays.deepToString(JInv).replace("], ", "]\n"));
+System.out.println(Arrays.deepToString(HOfIntegralPoint).replace("], ", "]\n") + "\n");
+ */
