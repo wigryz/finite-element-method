@@ -9,8 +9,8 @@ public enum IntegrationScheme {
 
     INTEGRATION_SCHEME_1N(
         List.of(0, 1),
-        List.of(-1d/Math.sqrt(3), 1d/Math.sqrt(3)),
-        List.of(1d, 1d)),
+        List.of(-1.0/Math.sqrt(3), 1.0/Math.sqrt(3)),
+        List.of(1.0, 1.0)),
 
     INTEGRATION_SCHEME_2N(
         List.of(0, 1, 2),

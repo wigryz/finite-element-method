@@ -45,7 +45,7 @@ public class Side {
         }
 
         for (int i = 0; i < integralScheme.getK().size(); i++) {
-            for (int j = 0; j < 4; j++) { // co jesli mamy 3 punktowy schemat calkowania
+            for (int j = 0; j < 4; j++) { // co jesli 3 punktowy schemat
                 N[i][0] = (0.25) * (1 - ksi[i]) * (1 - eta[i]);
                 N[i][1] = (0.25) * (1 + ksi[i]) * (1 - eta[i]);
                 N[i][2] = (0.25) * (1 + ksi[i]) * (1 + eta[i]);

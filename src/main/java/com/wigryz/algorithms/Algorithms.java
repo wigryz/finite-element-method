@@ -36,7 +36,7 @@ public class Algorithms {
         return result;
     }
 
-    public static void jacobian(int i, int j, double[][] J, double[][] JInv, Element4x2D element,
+    public static double jacobian(int i, int j, double[][] J, double[][] JInv, Element4x2D element,
                                 Grid grid) {
         List<Integer> nodeIdList = grid.getElements().get(i).getIdList();
 
@@ -46,14 +46,14 @@ public class Algorithms {
 
             double eta = element.getEtaArray()[j][k];
             double ksi = element.getKsiArray()[j][k];
-            // dYdEta
-            J[0][0] += eta * y;
-            // -dYdKsi
-            J[0][1] += -ksi * y;
-            // -dXdEta
-            J[1][0] += -eta * x;
             // dXdKsi
-            J[1][1] += ksi * x;
+            J[0][0] += ksi * x;
+            // dYdKsi
+            J[0][1] += ksi * y;
+            // dXdEta
+            J[1][0] += eta * x;
+            // dYdEta
+            J[1][1] += eta * y;
         }
         //obliczanie jakobianu (wyznacznika macierzy jakobiego)
         double det = J[0][0] * J[1][1] - J[1][0] * J[0][1];
@@ -67,12 +67,15 @@ public class Algorithms {
         for (int k = 0; k < J.length; k++)
             for (int h = 0; h < J[0].length; h++)
                 JInv[k][h] = 1d / det * J[k][h];
+
+        return det;
     }
 
     public static double[][] calculateHOfIntPoint(double[][] JInv, int integrationPoint,
-                                                  Element4x2D element) {
-        double k_t = 30.0; // wspolczynnik przewodzenia ciepla
-        double dV = 0.000156; // zmiana objetosci //to jest chyba wyznacznik jakobianu
+                                                  double detJ, Element4x2D element) {
+        //k_t to jest W/m2*K ???
+        double k_t = 25.0; // wspolczynnik przewodzenia ciepla
+        double dV = detJ;
 
         double[][] etaArray = element.getEtaArray();
         double[][] ksiArray = element.getKsiArray();
@@ -104,33 +107,37 @@ public class Algorithms {
 
         RealMatrix HBC = new Array2DRowRealMatrix(4, 4);
 
-        double detJ = 0.0;
-
+        double detJ;
         if (nodes.get(0).getBC() == nodes.get(1).getBC() && nodes.get(0).getBC() != 0) { //dolna
-            detJ = (nodes.get(1).getX() - nodes.get(0).getX()) / 2.0;
+            detJ = calculateDetJ(nodes.get(0), nodes.get(1));
             HBC = HBC.add(
                 new Array2DRowRealMatrix(
                     calculateSideHBC(detJ, alpha, Side.BOTTOM, universalElement)));
         }
         if (nodes.get(1).getBC() == nodes.get(2).getBC() && nodes.get(1).getBC() != 0) { //prawa
-            detJ = (nodes.get(2).getY() - nodes.get(1).getY()) / 2.0;
+            detJ = calculateDetJ(nodes.get(1), nodes.get(2));
             HBC = HBC.add(
                 new Array2DRowRealMatrix(
                     calculateSideHBC(detJ, alpha, Side.RIGHT, universalElement)));
         }
         if (nodes.get(2).getBC() == nodes.get(3).getBC() && nodes.get(0).getBC() != 0) { //gorna
-            detJ = (nodes.get(2).getX() - nodes.get(3).getX()) / 2.0;
+            detJ = calculateDetJ(nodes.get(3), nodes.get(2));
             HBC = HBC.add(
                 new Array2DRowRealMatrix(
                     calculateSideHBC(detJ, alpha, Side.TOP, universalElement)));
         }
         if (nodes.get(3).getBC() == nodes.get(0).getBC() && nodes.get(0).getBC() != 0) { //lewa
-            detJ = (nodes.get(3).getY() - nodes.get(0).getY()) / 2.0;
+            detJ = calculateDetJ(nodes.get(0), nodes.get(3));
             HBC = HBC.add(
                 new Array2DRowRealMatrix(
                     calculateSideHBC(detJ, alpha, Side.LEFT, universalElement)));
         }
         return HBC.getData();
+    }
+
+    private static double calculateDetJ(Node x1, Node x2) {
+        return Math.sqrt(Math.pow(x2.getX() - x1.getX(), 2) +
+            Math.pow((x1.getY() - x2.getY()), 2)) / 2.0;
     }
 
     /*
@@ -139,9 +146,7 @@ public class Algorithms {
         a później tylko mnożyć je przez alfę i detJ?
     */
 
-
     // alfa to współczynnik przewodzenia ciepła czy jakos tak
-    // SKĄD WZIĄĆ DET J ?!?
     public static double[][] calculateSideHBC(double detJ, double alpha, short side,
                                               Element4x2D element) {
         IntegrationScheme scheme = element.getIntegrationScheme();

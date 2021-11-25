@@ -10,7 +10,7 @@ public class Element4x2D {
 
     IntegrationScheme integrationScheme;
 
-    private double coord; //= 1d/Math.sqrt(3);
+    private double coord = 1d/Math.sqrt(3);
     private double[][] etaArray;
     private double[][] ksiArray;
     private int numberOfPoints;
@@ -19,7 +19,7 @@ public class Element4x2D {
 
     public Element4x2D(IntegrationScheme integrationScheme) {
         this.integrationScheme = integrationScheme;
-        coord = integrationScheme.getNodes().get(0); // TODO jak to powinno byc
+//        coord = integrationScheme.getNodes().get(1); // TODO jak to powinno byc
         numberOfPoints = (int)Math.pow(integrationScheme.getK().size(), 2);
         this.etaArray = new double[4][numberOfPoints];
         this.ksiArray = new double[4][numberOfPoints];

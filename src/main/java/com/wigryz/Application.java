@@ -32,7 +32,9 @@ public class Application {
 //        Side sideRight = new Side(IntegrationScheme.INTEGRATION_SCHEME_1N, Side.RIGHT);
 //        Side sideTop = new Side(IntegrationScheme.INTEGRATION_SCHEME_1N, Side.TOP);
 
-        Grid grid = new Grid(0.025, 0.025, 2, 2);
+        Grid grid = new Grid(0.1, 0.1, 4,  4);
         grid.calculate(element4x2D);
+        grid.agregate();
+        grid.getHG();
     }
 }

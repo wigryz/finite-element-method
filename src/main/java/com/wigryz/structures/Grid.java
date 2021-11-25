@@ -7,6 +7,7 @@ import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @Getter
@@ -21,6 +22,7 @@ public class Grid {
     private int nE; //number of elements
     private List<Node> nodes;
     private List<Element> elements;
+    private double[][] HG;
 
     private double dx; //delta x
     private double dy; // delta y
@@ -36,6 +38,7 @@ public class Grid {
         nE = (nH - 1) * (nB - 1);
         dx = b / (nB - 1);
         dy = h / (nH - 1);
+        HG = new double[nN][nN];
         createElement();
         createNodes();
     }
@@ -67,24 +70,37 @@ public class Grid {
     public void calculate(Element4x2D element) {
         for (int i = 0; i < getNE(); i++) {
             double[][] H = new double[4][4];
-            double[][] Hbc = new double[4][4];
             for (int j = 0; j < element.getNumberOfPoints(); j++) {
                 double[][] J = new double[2][2];
                 double[][] JInv = new double[2][2];
-                Algorithms.jacobian(i, j, J, JInv, element, this);
-                double[][] HOfIntegralPoint = Algorithms.calculateHOfIntPoint(JInv, j, element);
+                double detJ = Algorithms.jacobian(i, j, J, JInv, element, this);
+                double[][] HOfIntegralPoint =
+                    Algorithms.calculateHOfIntPoint(JInv, j, detJ, element);
                 for(int g=0 ; g < H.length ; g++) {
                     for (int h=0 ; h < H[g].length ; h++) {
                         H[h][g] += HOfIntegralPoint[h][g];
                     }
                 }
             }
-            Hbc = Algorithms.calculateHBC(this, i, 25, element);
+            double[][] Hbc = Algorithms.calculateHBC(this, i, 300.0, element);
             getElements().get(i).setH(H);
             getElements().get(i).setHbc(Hbc);
-            System.out.println(Arrays.deepToString(H).replace("], ", "]\n"));
+            System.out.println(Arrays.deepToString(Hbc).replace("], ", "]\n"));
         }
     }
+
+    public void agregate() {
+        for(int i=0 ; i < getNE() ; i++) {
+            Element element = elements.get(i);
+            int[] id = element.getIdList().stream().mapToInt(val->val).toArray();
+            for(int h=0 ; h < 4 ; h++) {
+                for(int g = 0 ; g < 4 ; g++) {
+                    HG[id[h] - 1][id[g] - 1] += (element.getH())[h][g] + (element.getHbc())[h][g];
+                }
+            }
+        }
+    }
+
 }
 
 /*
