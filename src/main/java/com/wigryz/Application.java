@@ -35,6 +35,7 @@ public class Application {
         Grid grid = new Grid(0.1, 0.1, 4,  4);
         grid.calculate(element4x2D);
         grid.agregate();
+        grid.calculateT();
         grid.getHG();
     }
 }

@@ -4,11 +4,16 @@ import com.wigryz.algorithms.Algorithms;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.DecompositionSolver;
+import org.apache.commons.math3.linear.LUDecomposition;
+import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealVector;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @Getter
 @Setter
@@ -23,6 +28,7 @@ public class Grid {
     private List<Node> nodes;
     private List<Element> elements;
     private double[][] HG;
+    private double[] PG;
 
     private double dx; //delta x
     private double dy; // delta y
@@ -39,6 +45,7 @@ public class Grid {
         dx = b / (nB - 1);
         dy = h / (nH - 1);
         HG = new double[nN][nN];
+        PG = new double[nN];
         createElement();
         createNodes();
     }
@@ -82,10 +89,12 @@ public class Grid {
                     }
                 }
             }
-            double[][] Hbc = Algorithms.calculateHBC(this, i, 300.0, element);
+            Map<String, Object> HbcAndP = Algorithms.calculateHbcAndP(this, i, 300.0,
+                                                                    1200.0, element);
             getElements().get(i).setH(H);
-            getElements().get(i).setHbc(Hbc);
-            System.out.println(Arrays.deepToString(Hbc).replace("], ", "]\n"));
+            getElements().get(i).setHbc((double[][])HbcAndP.get("HBC"));
+            getElements().get(i).setP((double[])HbcAndP.get("P"));
+//            System.out.println(Arrays.deepToString(Hbc).replace("], ", "]\n"));
         }
     }
 
@@ -97,10 +106,20 @@ public class Grid {
                 for(int g = 0 ; g < 4 ; g++) {
                     HG[id[h] - 1][id[g] - 1] += (element.getH())[h][g] + (element.getHbc())[h][g];
                 }
+                PG[id[h] - 1] += (element.getP())[h];
             }
         }
     }
 
+    public void calculateT() {
+        RealMatrix HG = new Array2DRowRealMatrix(getHG(), false);
+        RealVector P = new ArrayRealVector(getPG(), false);
+        DecompositionSolver solver = new LUDecomposition(HG).getSolver();
+        RealVector result = solver.solve(P);
+        //przypisać do każdego node`a
+
+        System.out.println("Calculated temperature!");
+    }
 }
 
 /*

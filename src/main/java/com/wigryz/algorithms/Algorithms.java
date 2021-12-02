@@ -6,10 +6,13 @@ import com.wigryz.structures.Grid;
 import com.wigryz.structures.Node;
 import com.wigryz.structures.Side;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealVector;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class Algorithms {
 
@@ -99,45 +102,49 @@ public class Algorithms {
         return resultX.add(resultY).scalarMultiply(k_t).scalarMultiply(dV).getData();
     }
 
-    public static double[][] calculateHBC(Grid grid, int elementId, double alpha,
-                                          Element4x2D universalElement) {
+    public static Map<String, Object> calculateHbcAndP(Grid grid, int elementId, double alpha,
+                                                       double t, Element4x2D universalElement) {
         Element element = grid.getElements().get(elementId);
         List<Node> nodes = new ArrayList<>(element.getIdList().size());
         element.getIdList().forEach(id -> nodes.add(grid.getNodes().get(id - 1)));
 
-        RealMatrix HBC = new Array2DRowRealMatrix(4, 4);
+        RealMatrix HbcMat = new Array2DRowRealMatrix(4, 4);
+        RealVector PMat = new ArrayRealVector(4);
 
         double detJ;
         if (nodes.get(0).getBC() == nodes.get(1).getBC() && nodes.get(0).getBC() != 0) { //dolna
             detJ = calculateDetJ(nodes.get(0), nodes.get(1));
-            HBC = HBC.add(
+            HbcMat = HbcMat.add(
                 new Array2DRowRealMatrix(
                     calculateSideHBC(detJ, alpha, Side.BOTTOM, universalElement)));
+            PMat = PMat.add(new ArrayRealVector(
+                calculateSideP(detJ, alpha, t, Side.BOTTOM, universalElement)));
         }
         if (nodes.get(1).getBC() == nodes.get(2).getBC() && nodes.get(1).getBC() != 0) { //prawa
             detJ = calculateDetJ(nodes.get(1), nodes.get(2));
-            HBC = HBC.add(
+            HbcMat = HbcMat.add(
                 new Array2DRowRealMatrix(
                     calculateSideHBC(detJ, alpha, Side.RIGHT, universalElement)));
+            PMat = PMat.add(new ArrayRealVector(
+                calculateSideP(detJ, alpha, t, Side.RIGHT, universalElement)));
         }
-        if (nodes.get(2).getBC() == nodes.get(3).getBC() && nodes.get(0).getBC() != 0) { //gorna
+        if (nodes.get(2).getBC() == nodes.get(3).getBC() && nodes.get(2).getBC() != 0) { //gorna
             detJ = calculateDetJ(nodes.get(3), nodes.get(2));
-            HBC = HBC.add(
+            HbcMat = HbcMat.add(
                 new Array2DRowRealMatrix(
                     calculateSideHBC(detJ, alpha, Side.TOP, universalElement)));
+            PMat = PMat.add(new ArrayRealVector(
+                calculateSideP(detJ, alpha, t, Side.TOP, universalElement)));
         }
-        if (nodes.get(3).getBC() == nodes.get(0).getBC() && nodes.get(0).getBC() != 0) { //lewa
+        if (nodes.get(3).getBC() == nodes.get(0).getBC() && nodes.get(3).getBC() != 0) { //lewa
             detJ = calculateDetJ(nodes.get(0), nodes.get(3));
-            HBC = HBC.add(
+            HbcMat = HbcMat.add(
                 new Array2DRowRealMatrix(
                     calculateSideHBC(detJ, alpha, Side.LEFT, universalElement)));
+            PMat = PMat.add(new ArrayRealVector(
+                calculateSideP(detJ, alpha, t, Side.LEFT, universalElement)));
         }
-        return HBC.getData();
-    }
-
-    private static double calculateDetJ(Node x1, Node x2) {
-        return Math.sqrt(Math.pow(x2.getX() - x1.getX(), 2) +
-            Math.pow((x1.getY() - x2.getY()), 2)) / 2.0;
+        return Map.of("HBC", HbcMat.getData(), "P", PMat.toArray());
     }
 
     /*
@@ -160,5 +167,24 @@ public class Algorithms {
             result = result.add(nRow.multiply(nRow.transpose()));
         }
         return result.scalarMultiply(detJ).scalarMultiply(alpha).getData();
+    }
+
+    private static double[] calculateSideP(double detJ, double alpha, double t, short side,
+                                           Element4x2D element) {
+        IntegrationScheme scheme = element.getIntegrationScheme();
+        double[][] NArray = element.getSides()[side].getN();
+
+        RealVector result = new ArrayRealVector(element.getNumberOfPoints());
+
+        for (int i = 0; i < scheme.k.size(); i++) {
+            RealVector nRow = new ArrayRealVector(NArray[i]);
+            result = result.add(nRow.mapMultiply(t));
+        }
+        return result.mapMultiply(detJ).mapMultiply(alpha).toArray();
+    }
+
+    private static double calculateDetJ(Node x1, Node x2) {
+        return Math.sqrt(Math.pow(x2.getX() - x1.getX(), 2) +
+            Math.pow((x1.getY() - x2.getY()), 2)) / 2.0;
     }
 }
