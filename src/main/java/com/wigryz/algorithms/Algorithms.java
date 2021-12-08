@@ -5,6 +5,7 @@ import com.wigryz.structures.Element4x2D;
 import com.wigryz.structures.Grid;
 import com.wigryz.structures.Node;
 import com.wigryz.structures.Side;
+import com.wigryz.utilities.Configuration;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
@@ -40,7 +41,7 @@ public class Algorithms {
     }
 
     public static double jacobian(int i, int j, double[][] J, double[][] JInv, Element4x2D element,
-                                Grid grid) {
+                                  Grid grid) {
         List<Integer> nodeIdList = grid.getElements().get(i).getIdList();
 
         for (int k = 0; k < nodeIdList.size(); k++) {
@@ -77,7 +78,7 @@ public class Algorithms {
     public static double[][] calculateHOfIntPoint(double[][] JInv, int integrationPoint,
                                                   double detJ, Element4x2D element) {
         //k_t to jest W/m2*K ???
-        double k_t = 25.0; // wspolczynnik przewodzenia ciepla
+        double k_t = Configuration.getInstance().conductivity(); // wspolczynnik przewodzenia ciepla
         double dV = detJ;
 
         double[][] etaArray = element.getEtaArray();

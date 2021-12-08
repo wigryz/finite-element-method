@@ -1,6 +1,7 @@
 package com.wigryz.structures;
 
 import com.wigryz.algorithms.Algorithms;
+import com.wigryz.utilities.Configuration;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -89,8 +90,10 @@ public class Grid {
                     }
                 }
             }
-            Map<String, Object> HbcAndP = Algorithms.calculateHbcAndP(this, i, 300.0,
-                                                                    1200.0, element);
+            Map<String, Object> HbcAndP =
+                Algorithms.calculateHbcAndP(this, i, Configuration.getInstance().alfa(),
+                                            Configuration.getInstance().ambientTemperature(),
+                                            element);
             getElements().get(i).setH(H);
             getElements().get(i).setHbc((double[][])HbcAndP.get("HBC"));
             getElements().get(i).setP((double[])HbcAndP.get("P"));
@@ -118,12 +121,7 @@ public class Grid {
         RealVector result = solver.solve(P);
         //przypisać do każdego node`a
 
+        System.out.println(result);
         System.out.println("Calculated temperature!");
     }
 }
-
-/*
-System.out.println(Arrays.deepToString(J).replace("], ", "]\n"));
-System.out.println(Arrays.deepToString(JInv).replace("], ", "]\n"));
-System.out.println(Arrays.deepToString(HOfIntegralPoint).replace("], ", "]\n") + "\n");
- */

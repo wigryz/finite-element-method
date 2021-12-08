@@ -5,6 +5,7 @@ import com.wigryz.algorithms.IntegrationScheme;
 import com.wigryz.structures.Element4x2D;
 import com.wigryz.structures.Grid;
 import com.wigryz.structures.Side;
+import com.wigryz.utilities.Configuration;
 
 import java.util.Arrays;
 
@@ -19,7 +20,6 @@ public class Application {
 //        System.out.println(Algorithms.gauss2D(function2, IntegralScheme.INTEGRAL_SCHEME_1N));
 //        System.out.println(Algorithms.gauss2D(function2, IntegralScheme.INTEGRAL_SCHEME_2N));
 
-        Element4x2D element4x2D = new Element4x2D(IntegrationScheme.INTEGRATION_SCHEME_1N);
 //
 //        for (int i = 0; i < 4; i++) {
 //            System.out.println("\nSide: " + i + "\n");
@@ -32,7 +32,12 @@ public class Application {
 //        Side sideRight = new Side(IntegrationScheme.INTEGRATION_SCHEME_1N, Side.RIGHT);
 //        Side sideTop = new Side(IntegrationScheme.INTEGRATION_SCHEME_1N, Side.TOP);
 
-        Grid grid = new Grid(0.1, 0.1, 4,  4);
+        Element4x2D element4x2D = new Element4x2D(IntegrationScheme.INTEGRATION_SCHEME_1N);
+        Configuration conf = Configuration.getInstance();
+        conf.loadConfigurationFromFile();
+
+        Grid grid = new Grid(conf.heightOfGrid(), conf.widthOfGrid(),
+                             conf.numberOfNodesOnHeight(), conf.numberOfNodesOnWidth());
         grid.calculate(element4x2D);
         grid.agregate();
         grid.calculateT();
