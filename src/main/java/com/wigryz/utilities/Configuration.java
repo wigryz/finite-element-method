@@ -72,7 +72,7 @@ public class Configuration {
         }
     }
 
-    public void initializeConfiguration() {
+    public void loadConfigurationHardcoded() {
         initialTemperature = 100.0;
         simulationTime = 500;
         simulationStepTime = 50;
