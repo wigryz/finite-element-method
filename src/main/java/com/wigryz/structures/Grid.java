@@ -53,13 +53,18 @@ public class Grid {
 
     private void createNodes() {
         int id = 1;
-        for (double x = 0; x <= b; x += dx) {
-            for (double y = 0; y <= h; y += dy) {
+        double x = 0.0;
+        double y = 0.0;
+        for (double i = 0; i < nB; i++) {
+            y = 0.0;
+            for (double j = 0; j < nH; j++) {
                 short bc = 0;
-                if(x == 0 || x == b || y == 0 || y == h)
+                if (i == 0 || i == nB - 1 || j == 0 || j == nH - 1)
                     bc = 1;
                 nodes.add(new Node(id++, x, y, bc));
+                y += dy;
             }
+            x += dx;
         }
     }
 
@@ -84,29 +89,29 @@ public class Grid {
                 double detJ = Algorithms.jacobian(i, j, J, JInv, element, this);
                 double[][] HOfIntegralPoint =
                     Algorithms.calculateHOfIntPoint(JInv, j, detJ, element);
-                for(int g=0 ; g < H.length ; g++) {
-                    for (int h=0 ; h < H[g].length ; h++) {
+                for (int g = 0; g < H.length; g++) {
+                    for (int h = 0; h < H[g].length; h++) {
                         H[h][g] += HOfIntegralPoint[h][g];
                     }
                 }
             }
             Map<String, Object> HbcAndP =
                 Algorithms.calculateHbcAndP(this, i, Configuration.getInstance().alfa(),
-                                            Configuration.getInstance().ambientTemperature(),
-                                            element);
+                    Configuration.getInstance().ambientTemperature(),
+                    element);
             getElements().get(i).setH(H);
-            getElements().get(i).setHbc((double[][])HbcAndP.get("HBC"));
-            getElements().get(i).setP((double[])HbcAndP.get("P"));
+            getElements().get(i).setHbc((double[][]) HbcAndP.get("HBC"));
+            getElements().get(i).setP((double[]) HbcAndP.get("P"));
 //            System.out.println(Arrays.deepToString(Hbc).replace("], ", "]\n"));
         }
     }
 
     public void agregate() {
-        for(int i=0 ; i < getNE() ; i++) {
+        for (int i = 0; i < getNE(); i++) {
             Element element = elements.get(i);
-            int[] id = element.getIdList().stream().mapToInt(val->val).toArray();
-            for(int h=0 ; h < 4 ; h++) {
-                for(int g = 0 ; g < 4 ; g++) {
+            int[] id = element.getIdList().stream().mapToInt(val -> val).toArray();
+            for (int h = 0; h < 4; h++) {
+                for (int g = 0; g < 4; g++) {
                     HG[id[h] - 1][id[g] - 1] += (element.getH())[h][g] + (element.getHbc())[h][g];
                 }
                 PG[id[h] - 1] += (element.getP())[h];

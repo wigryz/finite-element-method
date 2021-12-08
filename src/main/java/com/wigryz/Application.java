@@ -1,13 +1,9 @@
 package com.wigryz;
 
-import com.wigryz.algorithms.Algorithms;
 import com.wigryz.algorithms.IntegrationScheme;
 import com.wigryz.structures.Element4x2D;
 import com.wigryz.structures.Grid;
-import com.wigryz.structures.Side;
 import com.wigryz.utilities.Configuration;
-
-import java.util.Arrays;
 
 public class Application {
 
