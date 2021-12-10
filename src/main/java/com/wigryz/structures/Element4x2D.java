@@ -53,9 +53,7 @@ public class Element4x2D {
                     ksi = -coord;
                     eta = coord;
                 }
-                default -> {
-                    System.out.println("SHOULD NEVER GET HERE.");
-                }
+                default -> System.out.println("SHOULD NEVER GET HERE.");
             }
 
             ksiArray[i][0] = -0.25*(1-eta);
