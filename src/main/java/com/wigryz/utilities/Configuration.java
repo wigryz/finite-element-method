@@ -78,10 +78,10 @@ public class Configuration {
         simulationStepTime = 50;
         ambientTemperature = 1200.0;
         alfa = 300.0;
-        heightOfGrid = 0.100;
-        widthOfGrid = 0.100;
-        numberOfNodesOnHeight = 4;
-        numberOfNodesOnWidth = 4;
+        heightOfGrid = 0.025;
+        widthOfGrid = 0.025;
+        numberOfNodesOnHeight = 2;
+        numberOfNodesOnWidth = 2;
         specificHeat = 700.0;
         conductivity = 25.0;
         density = 7800.0;

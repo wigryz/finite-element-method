@@ -85,10 +85,10 @@ public class Algorithms {
         double[][] etaArray = element.getEtaArray();
         double[][] ksiArray = element.getKsiArray();
 
-        double[] dNidx = new double[etaArray.length];
-        double[] dNidy = new double[etaArray.length];
+        double[] dNidx = new double[etaArray[0].length];
+        double[] dNidy = new double[etaArray[0].length];
 
-        for (int j = 0; j < etaArray.length; j++) {
+        for (int j = 0; j < etaArray[0].length; j++) {
             dNidx[j] += inverseJacobian[0][0] * ksiArray[integrationPoint][j];
             dNidx[j] += inverseJacobian[0][1] * etaArray[integrationPoint][j];
 
