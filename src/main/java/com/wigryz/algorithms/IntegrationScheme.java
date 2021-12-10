@@ -14,8 +14,8 @@ public enum IntegrationScheme {
 
     INTEGRATION_SCHEME_2N(
         List.of(0, 1, 2),
-        List.of(-Math.sqrt(3)/Math.sqrt(5), 0d, Math.sqrt(3)/Math.sqrt(5)),
-        List.of(5d/9d, 8d/9d, 5d/9d));
+        List.of(-Math.sqrt(3)/Math.sqrt(5), 0.0, Math.sqrt(3)/Math.sqrt(5)),
+        List.of(5.0/9.0, 8.0/9.0, 5.0/9.0));
 
     IntegrationScheme(List<Integer> k, List<Double> nodes, List<Double> coefficients) {
         this.k = k;

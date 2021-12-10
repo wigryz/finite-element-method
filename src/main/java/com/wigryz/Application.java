@@ -9,9 +9,9 @@ public class Application {
 
     public static void main(String[] args) {
 
-        Element4x2D element4x2D = new Element4x2D(IntegrationScheme.INTEGRATION_SCHEME_1N);
+        Element4x2D element4x2D = new Element4x2D(IntegrationScheme.INTEGRATION_SCHEME_2N);
         Configuration conf = Configuration.getInstance();
-        conf.loadConfigurationFromFile();
+        conf.loadConfigurationHardcoded();
 
         Grid grid = new Grid(conf.heightOfGrid(), conf.widthOfGrid(),
                              conf.numberOfNodesOnHeight(), conf.numberOfNodesOnWidth(),
