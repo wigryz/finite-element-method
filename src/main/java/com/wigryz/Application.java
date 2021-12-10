@@ -8,25 +8,6 @@ import com.wigryz.utilities.Configuration;
 public class Application {
 
     public static void main(String[] args) {
-//        Function function1 = x -> 5 * Math.pow(x[0], 2) + 3 * x[0] + 6;
-//        Function function2 = x -> 5 * Math.pow(x[0], 2) * Math.pow(x[1], 2) + 3 * x[0] * x[1] + 6;
-//
-//        System.out.println(Algorithms.gauss1D(function1, IntegralScheme.INTEGRAL_SCHEME_1N));
-//        System.out.println(Algorithms.gauss1D(function1, IntegralScheme.INTEGRAL_SCHEME_2N));
-//        System.out.println(Algorithms.gauss2D(function2, IntegralScheme.INTEGRAL_SCHEME_1N));
-//        System.out.println(Algorithms.gauss2D(function2, IntegralScheme.INTEGRAL_SCHEME_2N));
-
-//
-//        for (int i = 0; i < 4; i++) {
-//            System.out.println("\nSide: " + i + "\n");
-//            double[][] result = Algorithms.calculateHBC(0.0125, 25, (short) i, element4x2D);
-//            System.out.println(Arrays.deepToString(result).replace("], ", "]\n"));
-//        }
-//
-//        Side sideLeft = new Side(IntegrationScheme.INTEGRATION_SCHEME_1N, Side.LEFT);
-//        Side sideBottom = new Side(IntegrationScheme.INTEGRATION_SCHEME_1N, Side.BOTTOM);
-//        Side sideRight = new Side(IntegrationScheme.INTEGRATION_SCHEME_1N, Side.RIGHT);
-//        Side sideTop = new Side(IntegrationScheme.INTEGRATION_SCHEME_1N, Side.TOP);
 
         Element4x2D element4x2D = new Element4x2D(IntegrationScheme.INTEGRATION_SCHEME_1N);
         Configuration conf = Configuration.getInstance();
@@ -36,7 +17,12 @@ public class Application {
                              conf.numberOfNodesOnHeight(), conf.numberOfNodesOnWidth());
         grid.calculate(element4x2D);
         grid.agregate();
-        grid.calculateT();
-        grid.getHG();
+        grid.printTemperatures();
+//        grid.calculateT();
+        for(int i=0 ; i < 10 ; i++) {
+            grid.calculateHandP();
+        }
+
+        System.out.println("\nDone.");
     }
 }

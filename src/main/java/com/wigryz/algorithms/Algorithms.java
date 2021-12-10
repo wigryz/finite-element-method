@@ -75,10 +75,11 @@ public class Algorithms {
         return det;
     }
 
-    public static double[][] calculateHOfIntPoint(double[][] JInv, int integrationPoint,
+    public static Map<String, double[][]> calculateHOfIntPoint(double[][] JInv,
+                                                               int integrationPoint,
                                                   double detJ, Element4x2D element) {
-        //k_t to jest W/m2*K ???
         double k_t = Configuration.getInstance().conductivity(); // wspolczynnik przewodzenia ciepla
+
         double dV = detJ;
 
         double[][] etaArray = element.getEtaArray();
@@ -86,7 +87,6 @@ public class Algorithms {
 
         double[] dNi_dx = new double[etaArray.length];
         double[] dNi_dy = new double[etaArray.length];
-
 
         for (int j = 0; j < etaArray.length; j++) {
             dNi_dx[j] += JInv[0][0] * ksiArray[integrationPoint][j];
@@ -100,7 +100,22 @@ public class Algorithms {
         RealMatrix resultX = xMatrix.multiply(xMatrix.transpose());
         RealMatrix yMatrix = new Array2DRowRealMatrix(dNi_dy);
         RealMatrix resultY = yMatrix.multiply(yMatrix.transpose());
-        return resultX.add(resultY).scalarMultiply(k_t).scalarMultiply(dV).getData();
+        double[][] H = resultX.add(resultY).scalarMultiply(k_t).scalarMultiply(dV).getData();
+
+        // obliczanie macierzy C
+        double specificHeat = Configuration.getInstance().specificHeat();
+        double density = Configuration.getInstance().density();
+
+        double[] array = element.getArray()[integrationPoint];
+        RealVector vector = new ArrayRealVector(array);
+        RealMatrix resultMatrix = vector.outerProduct(vector);
+
+        double[][] C = resultMatrix
+            .scalarMultiply(specificHeat)
+            .scalarMultiply(density)
+            .scalarMultiply(detJ)
+            .getData();
+        return Map.of("H", H, "C", C);
     }
 
     public static Map<String, Object> calculateHbcAndP(Grid grid, int elementId, double alpha,

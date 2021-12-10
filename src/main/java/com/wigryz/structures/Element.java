@@ -18,6 +18,7 @@ public class Element {
     private double[][] H; //4 x 4
     private double[][] Hbc; //4 x 4
     private double[] P; //wektor obciazen
+    private double[][] C;
 
     public Element(int id, int id1, int id2, int id3, int id4) {
         this.id = id;

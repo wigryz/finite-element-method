@@ -13,7 +13,9 @@ public class Element4x2D {
     private double coord = 1d/Math.sqrt(3);
     private double[][] etaArray;
     private double[][] ksiArray;
+    private double[][] array;
     private int numberOfPoints;
+
 
     private Side[] sides;
 
@@ -23,6 +25,7 @@ public class Element4x2D {
         numberOfPoints = (int)Math.pow(integrationScheme.getK().size(), 2);
         this.etaArray = new double[4][numberOfPoints];
         this.ksiArray = new double[4][numberOfPoints];
+        this.array = new double[4][numberOfPoints];
         sides = new Side[4];
         fillSides();
         fillArrays();
@@ -64,6 +67,11 @@ public class Element4x2D {
             etaArray[i][1] = -0.25*(1+ksi);
             etaArray[i][2] =  0.25*(1+ksi);
             etaArray[i][3] =  0.25*(1-ksi);
+
+            array[i][0] = 0.25*(1-ksi)*(1-eta);
+            array[i][1] = 0.25*(1+ksi)*(1-eta);
+            array[i][2] = 0.25*(1+ksi)*(1+eta);
+            array[i][3] = 0.25*(1-ksi)*(1+eta);
         }
     }
 
