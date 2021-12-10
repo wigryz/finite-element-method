@@ -40,8 +40,8 @@ public class Algorithms {
         return result;
     }
 
-    public static double jacobian(int i, int j, double[][] J, double[][] JInv, Element4x2D element,
-                                  Grid grid) {
+    public static double jacobian(int i, int j, double[][] jacobian, double[][] inverseJacobian,
+                                  Element4x2D element, Grid grid) {
         List<Integer> nodeIdList = grid.getElements().get(i).getIdList();
 
         for (int k = 0; k < nodeIdList.size(); k++) {
@@ -51,56 +51,56 @@ public class Algorithms {
             double eta = element.getEtaArray()[j][k];
             double ksi = element.getKsiArray()[j][k];
             // dXdKsi
-            J[0][0] += ksi * x;
+            jacobian[0][0] += ksi * x;
             // dYdKsi
-            J[0][1] += ksi * y;
+            jacobian[0][1] += ksi * y;
             // dXdEta
-            J[1][0] += eta * x;
+            jacobian[1][0] += eta * x;
             // dYdEta
-            J[1][1] += eta * y;
+            jacobian[1][1] += eta * y;
         }
         //obliczanie jakobianu (wyznacznika macierzy jakobiego)
-        double det = J[0][0] * J[1][1] - J[1][0] * J[0][1];
+        double detJ = jacobian[0][0] * jacobian[1][1] - jacobian[1][0] * jacobian[0][1];
 
         // transponowanie macierzy jakobiego
-        JInv[0][0] = J[1][1];
-        JInv[0][1] = -J[0][1];
-        JInv[1][0] = -J[1][0];
-        JInv[1][1] = J[0][0];
+        inverseJacobian[0][0] = jacobian[1][1];
+        inverseJacobian[0][1] = -jacobian[0][1];
+        inverseJacobian[1][0] = -jacobian[1][0];
+        inverseJacobian[1][1] = jacobian[0][0];
 
-        for (int k = 0; k < J.length; k++)
-            for (int h = 0; h < J[0].length; h++)
-                JInv[k][h] = 1d / det * J[k][h];
+        for (int k = 0; k < jacobian.length; k++)
+            for (int h = 0; h < jacobian[0].length; h++)
+                inverseJacobian[k][h] = 1d / detJ * jacobian[k][h];
 
-        return det;
+        return detJ;
     }
 
-    public static Map<String, double[][]> calculateHOfIntPoint(double[][] JInv,
-                                                               int integrationPoint,
-                                                  double detJ, Element4x2D element) {
-        double k_t = Configuration.getInstance().conductivity(); // wspolczynnik przewodzenia ciepla
-
+    public static Map<String, double[][]> calculateHAndCOfIntPoint(double[][] inverseJacobian,
+                                                                   int integrationPoint,
+                                                                   double detJ,
+                                                                   Element4x2D element) {
+        double kT = Configuration.getInstance().conductivity(); // wspolczynnik przewodzenia ciepla
         double dV = detJ;
 
         double[][] etaArray = element.getEtaArray();
         double[][] ksiArray = element.getKsiArray();
 
-        double[] dNi_dx = new double[etaArray.length];
-        double[] dNi_dy = new double[etaArray.length];
+        double[] dNidx = new double[etaArray.length];
+        double[] dNidy = new double[etaArray.length];
 
         for (int j = 0; j < etaArray.length; j++) {
-            dNi_dx[j] += JInv[0][0] * ksiArray[integrationPoint][j];
-            dNi_dx[j] += JInv[0][1] * etaArray[integrationPoint][j];
+            dNidx[j] += inverseJacobian[0][0] * ksiArray[integrationPoint][j];
+            dNidx[j] += inverseJacobian[0][1] * etaArray[integrationPoint][j];
 
-            dNi_dy[j] += JInv[1][0] * ksiArray[integrationPoint][j];
-            dNi_dy[j] += JInv[1][1] * etaArray[integrationPoint][j];
+            dNidy[j] += inverseJacobian[1][0] * ksiArray[integrationPoint][j];
+            dNidy[j] += inverseJacobian[1][1] * etaArray[integrationPoint][j];
         }
 
-        RealMatrix xMatrix = new Array2DRowRealMatrix(dNi_dx);
+        RealMatrix xMatrix = new Array2DRowRealMatrix(dNidx);
         RealMatrix resultX = xMatrix.multiply(xMatrix.transpose());
-        RealMatrix yMatrix = new Array2DRowRealMatrix(dNi_dy);
+        RealMatrix yMatrix = new Array2DRowRealMatrix(dNidy);
         RealMatrix resultY = yMatrix.multiply(yMatrix.transpose());
-        double[][] H = resultX.add(resultY).scalarMultiply(k_t).scalarMultiply(dV).getData();
+        double[][] h = resultX.add(resultY).scalarMultiply(kT).scalarMultiply(dV).getData();
 
         // obliczanie macierzy C
         double specificHeat = Configuration.getInstance().specificHeat();
@@ -110,12 +110,12 @@ public class Algorithms {
         RealVector vector = new ArrayRealVector(array);
         RealMatrix resultMatrix = vector.outerProduct(vector);
 
-        double[][] C = resultMatrix
+        double[][] c = resultMatrix
             .scalarMultiply(specificHeat)
             .scalarMultiply(density)
             .scalarMultiply(detJ)
             .getData();
-        return Map.of("H", H, "C", C);
+        return Map.of("H", h, "C", c);
     }
 
     public static Map<String, Object> calculateHbcAndP(Grid grid, int elementId, double alpha,
@@ -124,43 +124,47 @@ public class Algorithms {
         List<Node> nodes = new ArrayList<>(element.getIdList().size());
         element.getIdList().forEach(id -> nodes.add(grid.getNodes().get(id - 1)));
 
-        RealMatrix HbcMat = new Array2DRowRealMatrix(4, 4);
-        RealVector PMat = new ArrayRealVector(4);
+        RealMatrix hbcMatrix = new Array2DRowRealMatrix(4, 4);
+        RealVector pMatrix = new ArrayRealVector(4);
 
         double detJ;
-        if (nodes.get(0).getBC() == nodes.get(1).getBC() && nodes.get(0).getBC() != 0) { //dolna
+        if (nodes.get(0).getBoundaryCondition() == nodes.get(1).getBoundaryCondition() &&
+            nodes.get(0).getBoundaryCondition() != 0) { //dolna
             detJ = calculateDetJ(nodes.get(0), nodes.get(1));
-            HbcMat = HbcMat.add(
+            hbcMatrix = hbcMatrix.add(
                 new Array2DRowRealMatrix(
                     calculateSideHBC(detJ, alpha, Side.BOTTOM, universalElement)));
-            PMat = PMat.add(new ArrayRealVector(
+            pMatrix = pMatrix.add(new ArrayRealVector(
                 calculateSideP(detJ, alpha, t, Side.BOTTOM, universalElement)));
         }
-        if (nodes.get(1).getBC() == nodes.get(2).getBC() && nodes.get(1).getBC() != 0) { //prawa
+        if (nodes.get(1).getBoundaryCondition() == nodes.get(2).getBoundaryCondition() &&
+            nodes.get(1).getBoundaryCondition() != 0) { //prawa
             detJ = calculateDetJ(nodes.get(1), nodes.get(2));
-            HbcMat = HbcMat.add(
+            hbcMatrix = hbcMatrix.add(
                 new Array2DRowRealMatrix(
                     calculateSideHBC(detJ, alpha, Side.RIGHT, universalElement)));
-            PMat = PMat.add(new ArrayRealVector(
+            pMatrix = pMatrix.add(new ArrayRealVector(
                 calculateSideP(detJ, alpha, t, Side.RIGHT, universalElement)));
         }
-        if (nodes.get(2).getBC() == nodes.get(3).getBC() && nodes.get(2).getBC() != 0) { //gorna
+        if (nodes.get(2).getBoundaryCondition() == nodes.get(3).getBoundaryCondition() &&
+            nodes.get(2).getBoundaryCondition() != 0) { //gorna
             detJ = calculateDetJ(nodes.get(3), nodes.get(2));
-            HbcMat = HbcMat.add(
+            hbcMatrix = hbcMatrix.add(
                 new Array2DRowRealMatrix(
                     calculateSideHBC(detJ, alpha, Side.TOP, universalElement)));
-            PMat = PMat.add(new ArrayRealVector(
+            pMatrix = pMatrix.add(new ArrayRealVector(
                 calculateSideP(detJ, alpha, t, Side.TOP, universalElement)));
         }
-        if (nodes.get(3).getBC() == nodes.get(0).getBC() && nodes.get(3).getBC() != 0) { //lewa
+        if (nodes.get(3).getBoundaryCondition() == nodes.get(0).getBoundaryCondition() &&
+            nodes.get(3).getBoundaryCondition() != 0) { //lewa
             detJ = calculateDetJ(nodes.get(0), nodes.get(3));
-            HbcMat = HbcMat.add(
+            hbcMatrix = hbcMatrix.add(
                 new Array2DRowRealMatrix(
                     calculateSideHBC(detJ, alpha, Side.LEFT, universalElement)));
-            PMat = PMat.add(new ArrayRealVector(
+            pMatrix = pMatrix.add(new ArrayRealVector(
                 calculateSideP(detJ, alpha, t, Side.LEFT, universalElement)));
         }
-        return Map.of("HBC", HbcMat.getData(), "P", PMat.toArray());
+        return Map.of("HBC", hbcMatrix.getData(), "P", pMatrix.toArray());
     }
 
     /*
@@ -173,13 +177,13 @@ public class Algorithms {
     public static double[][] calculateSideHBC(double detJ, double alpha, short side,
                                               Element4x2D element) {
         IntegrationScheme scheme = element.getIntegrationScheme();
-        double[][] NArray = element.getSides()[side].getN();
+        double[][] nArray = element.getSides()[side].getN();
 
         RealMatrix result = new Array2DRowRealMatrix(element.getNumberOfPoints(),
-            element.getNumberOfPoints());
+                                                     element.getNumberOfPoints());
 
         for (int i = 0; i < scheme.k.size(); i++) {
-            RealMatrix nRow = new Array2DRowRealMatrix(NArray[i]);
+            RealMatrix nRow = new Array2DRowRealMatrix(nArray[i]);
             result = result.add(nRow.multiply(nRow.transpose()));
         }
         return result.scalarMultiply(detJ).scalarMultiply(alpha).getData();
@@ -188,12 +192,12 @@ public class Algorithms {
     private static double[] calculateSideP(double detJ, double alpha, double t, short side,
                                            Element4x2D element) {
         IntegrationScheme scheme = element.getIntegrationScheme();
-        double[][] NArray = element.getSides()[side].getN();
+        double[][] nArray = element.getSides()[side].getN();
 
         RealVector result = new ArrayRealVector(element.getNumberOfPoints());
 
         for (int i = 0; i < scheme.k.size(); i++) {
-            RealVector nRow = new ArrayRealVector(NArray[i]);
+            RealVector nRow = new ArrayRealVector(nArray[i]);
             result = result.add(nRow.mapMultiply(t));
         }
         return result.mapMultiply(detJ).mapMultiply(alpha).toArray();
@@ -201,6 +205,6 @@ public class Algorithms {
 
     private static double calculateDetJ(Node x1, Node x2) {
         return Math.sqrt(Math.pow(x2.getX() - x1.getX(), 2) +
-            Math.pow((x1.getY() - x2.getY()), 2)) / 2.0;
+                             Math.pow((x1.getY() - x2.getY()), 2)) / 2.0;
     }
 }

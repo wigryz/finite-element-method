@@ -14,20 +14,20 @@ import java.util.List;
 @ToString
 public class Side {
 
-    public static short BOTTOM = 0;
-    public static short RIGHT = 1;
-    public static short TOP = 2;
-    public static short LEFT = 3;
+    public static final short BOTTOM = 0;
+    public static final short RIGHT = 1;
+    public static final short TOP = 2;
+    public static final short LEFT = 3;
 
-    double ksi[];
-    double eta[];
-    double N[][];
+    double[] ksi;
+    double[] eta;
+    double[][] n;
 
     public Side(IntegrationScheme integralScheme, short wallId) {
         int numberOfPoints = integralScheme.getK().size();
         this.ksi = new double[numberOfPoints];
         this.eta = new double[numberOfPoints];
-        N = new double[numberOfPoints][4];
+        n = new double[numberOfPoints][4];
 
         List<Double> integrationPoints = new ArrayList<>(integralScheme.getNodes());
 
@@ -46,10 +46,10 @@ public class Side {
 
         for (int i = 0; i < integralScheme.getK().size(); i++) {
             for (int j = 0; j < 4; j++) { // co jesli 3 punktowy schemat
-                N[i][0] = (0.25) * (1 - ksi[i]) * (1 - eta[i]);
-                N[i][1] = (0.25) * (1 + ksi[i]) * (1 - eta[i]);
-                N[i][2] = (0.25) * (1 + ksi[i]) * (1 + eta[i]);
-                N[i][3] = (0.25) * (1 - ksi[i]) * (1 + eta[i]);
+                n[i][0] = (0.25) * (1 - ksi[i]) * (1 - eta[i]);
+                n[i][1] = (0.25) * (1 + ksi[i]) * (1 - eta[i]);
+                n[i][2] = (0.25) * (1 + ksi[i]) * (1 + eta[i]);
+                n[i][3] = (0.25) * (1 - ksi[i]) * (1 + eta[i]);
             }
         }
     }

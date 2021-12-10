@@ -14,15 +14,11 @@ public class Application {
         conf.loadConfigurationFromFile();
 
         Grid grid = new Grid(conf.heightOfGrid(), conf.widthOfGrid(),
-                             conf.numberOfNodesOnHeight(), conf.numberOfNodesOnWidth());
-        grid.calculate(element4x2D);
-        grid.agregate();
+                             conf.numberOfNodesOnHeight(), conf.numberOfNodesOnWidth(),
+                             element4x2D);
         grid.printTemperatures();
-//        grid.calculateT();
         for(int i=0 ; i < 10 ; i++) {
-            grid.calculateHandP();
+            grid.iterate();
         }
-
-        System.out.println("\nDone.");
     }
 }
