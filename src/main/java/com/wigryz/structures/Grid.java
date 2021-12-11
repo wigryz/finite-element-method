@@ -106,8 +106,8 @@ public class Grid {
                 double[][] cOfIntegralPoint = hAndC.get("C");
                 for (int k = 0; k < hLocal.length; k++) {
                     for (int l = 0; l < hLocal[k].length; l++) {
-                        hLocal[l][k] += hOfIntegralPoint[l][k];
-                        cLocal[l][k] += cOfIntegralPoint[l][k];
+                        hLocal[k][l] += hOfIntegralPoint[k][l];
+                        cLocal[k][l] += cOfIntegralPoint[k][l];
                     }
                 }
             }

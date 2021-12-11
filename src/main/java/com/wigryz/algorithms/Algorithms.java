@@ -17,6 +17,8 @@ import java.util.Map;
 
 public class Algorithms {
 
+    private static final int NUMBER_OF_SHAPE_FUNCTIONS = 4;
+
     private Algorithms() {
     }
 
@@ -40,7 +42,8 @@ public class Algorithms {
         return result;
     }
 
-    public static double jacobian(int i, int j, double[][] jacobian, double[][] inverseJacobian,
+    public static double jacobian(int i, int integrationPoint, double[][] jacobian,
+                                  double[][] inverseJacobian,
                                   Element4x2D element, Grid grid) {
         List<Integer> nodeIdList = grid.getElements().get(i).getIdList();
 
@@ -48,8 +51,8 @@ public class Algorithms {
             double x = grid.getNodes().get(nodeIdList.get(k) - 1).getX();
             double y = grid.getNodes().get(nodeIdList.get(k) - 1).getY();
 
-            double eta = element.getEtaArray()[j][k];
-            double ksi = element.getKsiArray()[j][k];
+            double eta = element.getEtaArray()[integrationPoint][k];
+            double ksi = element.getKsiArray()[integrationPoint][k];
             // dXdKsi
             jacobian[0][0] += ksi * x;
             // dYdKsi
@@ -79,6 +82,27 @@ public class Algorithms {
                                                                    int integrationPoint,
                                                                    double detJ,
                                                                    Element4x2D element) {
+        record CoefficientIdsOfIntegrationPoint(int IP, int ksi, int eta) {
+        }
+        List<CoefficientIdsOfIntegrationPoint> points;
+
+        if (element.getIntegrationScheme() == IntegrationScheme.INTEGRATION_SCHEME_1N) {
+            points = List.of(new CoefficientIdsOfIntegrationPoint(0, 0, 0),
+                            new CoefficientIdsOfIntegrationPoint(1, 1, 0),
+                            new CoefficientIdsOfIntegrationPoint(2, 1, 1),
+                            new CoefficientIdsOfIntegrationPoint(3, 0, 1));
+        } else {
+            points = List.of(new CoefficientIdsOfIntegrationPoint(0, 0, 0),
+                            new CoefficientIdsOfIntegrationPoint(1, 2, 0),
+                            new CoefficientIdsOfIntegrationPoint(2, 2, 2),
+                            new CoefficientIdsOfIntegrationPoint(3, 0, 2),
+                            new CoefficientIdsOfIntegrationPoint(4, 1, 0),
+                            new CoefficientIdsOfIntegrationPoint(5, 2, 1),
+                            new CoefficientIdsOfIntegrationPoint(6, 1, 2),
+                            new CoefficientIdsOfIntegrationPoint(7, 0, 1),
+                            new CoefficientIdsOfIntegrationPoint(8, 1, 1));
+        }
+
         double kT = Configuration.getInstance().conductivity(); // wspolczynnik przewodzenia ciepla
         double dV = detJ;
 
@@ -88,7 +112,7 @@ public class Algorithms {
         double[] dNidx = new double[etaArray[0].length];
         double[] dNidy = new double[etaArray[0].length];
 
-        for (int j = 0; j < etaArray[0].length; j++) {
+        for (int j = 0; j < NUMBER_OF_SHAPE_FUNCTIONS; j++) {
             dNidx[j] += inverseJacobian[0][0] * ksiArray[integrationPoint][j];
             dNidx[j] += inverseJacobian[0][1] * etaArray[integrationPoint][j];
 
@@ -100,7 +124,14 @@ public class Algorithms {
         RealMatrix resultX = xMatrix.multiply(xMatrix.transpose());
         RealMatrix yMatrix = new Array2DRowRealMatrix(dNidy);
         RealMatrix resultY = yMatrix.multiply(yMatrix.transpose());
-        double[][] h = resultX.add(resultY).scalarMultiply(kT).scalarMultiply(dV).getData();
+        double[][] h = resultX.add(resultY)
+                              .scalarMultiply(kT)
+                              .scalarMultiply(dV)
+                              .scalarMultiply(element.getIntegrationScheme().getCoefficients()
+                                                     .get(points.get(integrationPoint).eta))
+                              .scalarMultiply(element.getIntegrationScheme().getCoefficients()
+                                                     .get(points.get(integrationPoint).ksi))
+                              .getData();
 
         // obliczanie macierzy C
         double specificHeat = Configuration.getInstance().specificHeat();
@@ -110,10 +141,15 @@ public class Algorithms {
         RealVector vector = new ArrayRealVector(array);
         RealMatrix resultMatrix = vector.outerProduct(vector);
 
+        //mnozenie przez wage?
         double[][] c = resultMatrix
             .scalarMultiply(specificHeat)
             .scalarMultiply(density)
             .scalarMultiply(detJ)
+            .scalarMultiply(element.getIntegrationScheme().getCoefficients()
+                                   .get(points.get(integrationPoint).eta))
+            .scalarMultiply(element.getIntegrationScheme().getCoefficients()
+                                   .get(points.get(integrationPoint).ksi))
             .getData();
         return Map.of("H", h, "C", c);
     }
@@ -179,12 +215,14 @@ public class Algorithms {
         IntegrationScheme scheme = element.getIntegrationScheme();
         double[][] nArray = element.getSides()[side].getN();
 
-        RealMatrix result = new Array2DRowRealMatrix(element.getNumberOfPoints(),
-                                                     element.getNumberOfPoints());
+        RealMatrix result = new Array2DRowRealMatrix(NUMBER_OF_SHAPE_FUNCTIONS,
+                                                     NUMBER_OF_SHAPE_FUNCTIONS);
 
         for (int i = 0; i < scheme.k.size(); i++) {
             RealMatrix nRow = new Array2DRowRealMatrix(nArray[i]);
-            result = result.add(nRow.multiply(nRow.transpose()));
+            result =
+                result.add(nRow.multiply(nRow.transpose()).scalarMultiply(
+                    element.getIntegrationScheme().getCoefficients().get(i)));
         }
         return result.scalarMultiply(detJ).scalarMultiply(alpha).getData();
     }
@@ -194,11 +232,12 @@ public class Algorithms {
         IntegrationScheme scheme = element.getIntegrationScheme();
         double[][] nArray = element.getSides()[side].getN();
 
-        RealVector result = new ArrayRealVector(element.getNumberOfPoints());
+        RealVector result = new ArrayRealVector(NUMBER_OF_SHAPE_FUNCTIONS);
 
         for (int i = 0; i < scheme.k.size(); i++) {
             RealVector nRow = new ArrayRealVector(nArray[i]);
-            result = result.add(nRow.mapMultiply(t));
+            result = result.add(nRow.mapMultiply(t).mapMultiply(
+                element.getIntegrationScheme().getCoefficients().get(i)));
         }
         return result.mapMultiply(detJ).mapMultiply(alpha).toArray();
     }

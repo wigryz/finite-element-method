@@ -1,5 +1,7 @@
 package com.wigryz.utilities;
 
+import com.wigryz.algorithms.IntegrationScheme;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.net.URISyntaxException;
@@ -23,6 +25,7 @@ public class Configuration {
     private double specificHeat;            //unused
     private double conductivity;
     private double density;                 //unused
+    private IntegrationScheme integrationScheme;
 
     private Configuration() {
     }
@@ -61,6 +64,9 @@ public class Configuration {
             conductivity = in.nextDouble();
             in.next();
             density = in.nextDouble();
+            in.next();
+            integrationScheme = in.nextInt() == 1 ? IntegrationScheme.INTEGRATION_SCHEME_1N :
+                IntegrationScheme.INTEGRATION_SCHEME_2N;
         } catch (FileNotFoundException e) {
             System.out.println("Failed during opening init file.");
             System.exit(1);
@@ -78,13 +84,14 @@ public class Configuration {
         simulationStepTime = 50;
         ambientTemperature = 1200.0;
         alfa = 300.0;
-        heightOfGrid = 0.025;
-        widthOfGrid = 0.025;
-        numberOfNodesOnHeight = 2;
-        numberOfNodesOnWidth = 2;
+        heightOfGrid = 0.1;
+        widthOfGrid = 0.1;
+        numberOfNodesOnHeight = 4;
+        numberOfNodesOnWidth = 4;
         specificHeat = 700.0;
         conductivity = 25.0;
         density = 7800.0;
+        integrationScheme = IntegrationScheme.INTEGRATION_SCHEME_1N;
     }
 
     public double initialTemperature() {
@@ -133,5 +140,9 @@ public class Configuration {
 
     public double density() {
         return density;
+    }
+
+    public IntegrationScheme integrationScheme() {
+        return integrationScheme;
     }
 }

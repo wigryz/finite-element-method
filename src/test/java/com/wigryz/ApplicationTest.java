@@ -6,10 +6,14 @@ import com.wigryz.structures.Grid;
 import com.wigryz.structures.Node;
 import com.wigryz.utilities.Configuration;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class ApplicationTest {
 
     Configuration conf = Configuration.getInstance();
@@ -31,6 +35,7 @@ class ApplicationTest {
     }
 
     @Test
+    @Order(1)
     void testFor1NIntegralScheme() {
         Element4x2D element4x2D = new Element4x2D(IntegrationScheme.INTEGRATION_SCHEME_1N);
 
@@ -53,6 +58,7 @@ class ApplicationTest {
     }
 
     @Test
+    @Order(2)
     void testFor2NIntegralScheme() {
 
         Element4x2D element4x2D = new Element4x2D(IntegrationScheme.INTEGRATION_SCHEME_2N);
@@ -74,6 +80,40 @@ class ApplicationTest {
                            .toArray();
         assertTrue(compareTwoArraysWithGivenPrecision(temperatures, tempAfterTwoSteps, 0.0001));
     }
+
+    @Test
+    void compareN1ToN2() {
+        System.out.println("1N");
+        Element4x2D element4x2D1N = new Element4x2D(IntegrationScheme.INTEGRATION_SCHEME_1N);
+        Grid grid1 = new Grid(0.025, 0.025,
+                              2, 2,
+                              element4x2D1N);
+
+        System.out.println("2N");
+
+        Element4x2D element4x2D2N = new Element4x2D(IntegrationScheme.INTEGRATION_SCHEME_2N);
+        Grid grid2 = new Grid(0.025, 0.025,
+                              2, 2,
+                              element4x2D2N);
+        assertTrue(compareTwoNestedArraysWithGivenPrecision(grid1.getGlobalH(), grid2.getGlobalH(),
+                                                            0.001));
+        assertTrue(compareTwoNestedArraysWithGivenPrecision(grid1.getGlobalC(), grid2.getGlobalC(),
+                                                            0.001));
+        assertTrue(compareTwoArraysWithGivenPrecision(grid1.getGlobalP(),
+                                                      grid2.getGlobalP(),
+                                                      0.001));
+    }
+
+    boolean compareTwoNestedArraysWithGivenPrecision(double[][] A, double[][] B, double precision) {
+        for (int i = 0; i < A.length; i++) {
+            for (int j = 0; j < A[0].length; j++) {
+                if (Math.abs(A[i][j] - B[i][j]) > precision)
+                    return false;
+            }
+        }
+        return true;
+    }
+
 
     boolean compareTwoArraysWithGivenPrecision(double[] A, double[] B, double precision) {
         for (int i = 0; i < A.length; i++) {

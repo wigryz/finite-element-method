@@ -29,10 +29,10 @@ public class Element4x2D {
         sides = new Side[4];
         if (integrationScheme.equals(IntegrationScheme.INTEGRATION_SCHEME_1N)) {
             fillArrays1N();
-            fillSides();
         } else {
             fillArrays2N();
         }
+        fillSides();
     }
 
     private void fillArrays1N() {
