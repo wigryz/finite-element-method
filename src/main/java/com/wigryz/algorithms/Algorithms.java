@@ -203,13 +203,6 @@ public class Algorithms {
         return Map.of("HBC", hbcMatrix.getData(), "P", pMatrix.toArray());
     }
 
-    /*
-        PYTANIE
-        czy nie łatwiej byłoby obliczyć raz cztery macierze Hbc dla każdej ze ścian
-        a później tylko mnożyć je przez alfę i detJ?
-    */
-
-    // alfa to współczynnik przewodzenia ciepła czy jakos tak
     public static double[][] calculateSideHBC(double detJ, double alpha, short side,
                                               Element4x2D element) {
         IntegrationScheme scheme = element.getIntegrationScheme();
@@ -221,10 +214,14 @@ public class Algorithms {
         for (int i = 0; i < scheme.k.size(); i++) {
             RealMatrix nRow = new Array2DRowRealMatrix(nArray[i]);
             result =
-                result.add(nRow.multiply(nRow.transpose()).scalarMultiply(
-                    element.getIntegrationScheme().getCoefficients().get(i)));
+                result.add(nRow.multiply(nRow.transpose())
+                               .scalarMultiply(element.getIntegrationScheme()
+                                                      .getCoefficients()
+                                                      .get(i)));
         }
-        return result.scalarMultiply(detJ).scalarMultiply(alpha).getData();
+        return result.scalarMultiply(detJ)
+                     .scalarMultiply(alpha)
+                     .getData();
     }
 
     private static double[] calculateSideP(double detJ, double alpha, double t, short side,

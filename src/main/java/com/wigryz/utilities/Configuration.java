@@ -13,18 +13,18 @@ import java.util.Scanner;
 public class Configuration {
     private static Configuration instance;
 
-    private double initialTemperature;
-    private int simulationTime;             // [s]
-    private int simulationStepTime;         // [s]
-    private double ambientTemperature;
-    private double alfa;
+    private double initialTemperature;      // temperatura poczatkowa w wezlach
+    private int simulationTime;             // czas symulacji [s]
+    private int simulationStepTime;         // skok czasu w symulacji [s]
+    private double ambientTemperature;      // temperatura otoczenia
+    private double alfa;                    // wspolczynnik konwekcyjnej wymiany ciepla
     private double heightOfGrid;
     private double widthOfGrid;
     private int numberOfNodesOnHeight;
     private int numberOfNodesOnWidth;
-    private double specificHeat;            //unused
-    private double conductivity;
-    private double density;                 //unused
+    private double specificHeat;            // cieplo wlasciwe
+    private double conductivity;            // wspolczynnik przewodzenia ciepla|przewodnosc cieplna
+    private double density;                 // gestosc
     private IntegrationScheme integrationScheme;
 
     private Configuration() {
