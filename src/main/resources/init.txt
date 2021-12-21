@@ -10,4 +10,4 @@ numberOfNodesOnWidth 4
 specificHeat 700.0
 conductivity 25.0
 density 7800.0
-integrationScheme 3
+integrationScheme 2

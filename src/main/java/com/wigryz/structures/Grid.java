@@ -141,14 +141,14 @@ public class Grid {
 
         RealMatrix hGlobalMatrix = new Array2DRowRealMatrix(this.getGlobalH(), false);
         RealMatrix cGlobalMatrix = new Array2DRowRealMatrix(this.getGlobalC(), false);
-        RealVector pGlobalMatrix = new ArrayRealVector(this.getGlobalP());
+        RealVector pGlobalVector = new ArrayRealVector(this.getGlobalP());
 
         RealMatrix t0 = new Array2DRowRealMatrix(getNodes().stream()
                                                            .mapToDouble(Node::getTemperature)
                                                            .toArray());
 
         RealMatrix hDash = hGlobalMatrix.add(cGlobalMatrix.scalarMultiply(1 / dT));
-        RealVector pDash = pGlobalMatrix.add(cGlobalMatrix.scalarMultiply(1 / dT)
+        RealVector pDash = pGlobalVector.add(cGlobalMatrix.scalarMultiply(1 / dT)
                                                .multiply(t0)
                                                .getColumnVector(0));
 

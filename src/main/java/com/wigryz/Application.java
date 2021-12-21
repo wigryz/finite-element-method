@@ -9,7 +9,8 @@ public class Application {
     public static void main(String[] args) {
 
         Configuration conf = Configuration.getInstance();
-        conf.loadConfigurationFromFile();
+//        conf.loadConfigurationFromFile();
+        conf.loadConfigurationHardcoded();
 
         Element4x2D element4x2D = new Element4x2D(conf.integrationScheme());
         Grid grid = new Grid(conf.heightOfGrid(), conf.widthOfGrid(),
