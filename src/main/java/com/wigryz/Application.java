@@ -1,6 +1,5 @@
 package com.wigryz;
 
-import com.wigryz.structures.Element4x2D;
 import com.wigryz.structures.Grid;
 import com.wigryz.utilities.Configuration;
 
@@ -10,14 +9,18 @@ public class Application {
 
         Configuration conf = Configuration.getInstance();
 //        conf.loadConfigurationFromFile();
-        conf.loadConfigurationHardcoded();
+//        conf.loadConfigurationHardcoded();
+//        conf.loadInitDataFromFile("Test1_4_4.txt");
+        conf.loadInitDataFromFile("Test2_4_4_MixGrid.txt");
+//        conf.loadInitDataFromFile("Test3_31_31_kwadrat.txt");
+//        conf.loadInitDataFromFile("Test4_31_31_trapez.txt");
 
-        Element4x2D element4x2D = new Element4x2D(conf.integrationScheme());
-        Grid grid = new Grid(conf.heightOfGrid(), conf.widthOfGrid(),
-                             conf.numberOfNodesOnHeight(), conf.numberOfNodesOnWidth(),
-                             element4x2D);
+//        Grid grid = new Grid(conf.heightOfGrid(), conf.widthOfGrid(),
+//                             conf.numberOfNodesOnHeight(), conf.numberOfNodesOnWidth(),
+//                             new Element4x2D(conf.integrationScheme()));
+        Grid grid = new Grid(conf);
         grid.printTemperatures();
-        for(int i=0 ; i < 10 ; i++) {
+        while(grid.getCurrentTime() < conf.simulationTime()) {
             grid.iterate();
         }
     }

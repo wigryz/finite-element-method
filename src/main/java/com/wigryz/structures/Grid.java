@@ -60,6 +60,22 @@ public class Grid {
         aggregate();
     }
 
+    public Grid(Configuration configuration) {
+        nodes = configuration.nodes();
+        elements = configuration.elements();
+        nN = configuration.numberOfNodes();
+        nB = configuration.numberOfNodesOnWidth();
+        nE = configuration.numberOfElements();
+
+        globalH = new double[nN][nN];
+        globalC = new double[nN][nN];
+        globalP = new double[nN];
+
+        Element4x2D element4x2D = new Element4x2D(configuration.integrationScheme());
+        calculate(element4x2D);
+        aggregate();
+    }
+
     private void createNodes() {
         double initialTemperature = Configuration.getInstance().initialTemperature();
         int id = 1;
@@ -157,7 +173,7 @@ public class Grid {
 
         IntStream.range(0, nN)
                  .forEach(n -> this.getNodes().get(n).setTemperature(result.getEntry(n)));
-        currentTime += 50;
+        currentTime += Configuration.getInstance().simulationStepTime();
         printTemperatures();
     }
 
