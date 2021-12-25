@@ -6,37 +6,44 @@ import com.wigryz.structures.Grid;
 import com.wigryz.structures.Node;
 import com.wigryz.structures.Side;
 import com.wigryz.utilities.Configuration;
+import com.wigryz.utilities.MatrixUtils;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.function.ToDoubleBiFunction;
+import java.util.function.ToDoubleFunction;
 
 public class Algorithms {
 
     private static final int NUMBER_OF_SHAPE_FUNCTIONS = 4;
+    private static final Logger log = LogManager.getLogger();
 
     private Algorithms() {
     }
 
-    public static double gauss1D(Function fun, IntegrationScheme scheme) {
+    public static double gauss1D(ToDoubleFunction<Double> fun, IntegrationScheme scheme) {
         double result = 0d;
         for (int i = 0; i < scheme.k.size(); i++) {
-            result += scheme.coefficients.get(i) * fun.apply(scheme.nodes.get(i));
+            result += scheme.coefficients.get(i) * fun.applyAsDouble(scheme.nodes.get(i));
         }
         return result;
     }
 
-    public static double gauss2D(Function fun, IntegrationScheme scheme) {
+    public static double gauss2D(ToDoubleBiFunction<Double, Double> fun, IntegrationScheme scheme) {
         double result = 0d;
         for (int i = 0; i < scheme.k.size(); i++) {
             for (int j = 0; j < scheme.k.size(); j++) {
                 result += scheme.coefficients.get(i)
-                    * scheme.coefficients.get(j)
-                    * fun.apply(scheme.nodes.get(i), scheme.nodes.get(j));
+                          * scheme.coefficients.get(j)
+                          * fun.applyAsDouble(scheme.nodes.get(i), scheme.nodes.get(j));
             }
         }
         return result;
@@ -63,7 +70,7 @@ public class Algorithms {
             jacobian[1][1] += dNdEta * y;
         }
         //obliczanie jakobianu (wyznacznika macierzy jakobiego)
-        double detJ = jacobian[0][0] * jacobian[1][1] - jacobian[1][0] * jacobian[0][1];
+        double detJ = (jacobian[0][0] * jacobian[1][1]) - (jacobian[1][0] * jacobian[0][1]);
 
         // transponowanie macierzy jakobiego
         inverseJacobian[0][0] = jacobian[1][1];
@@ -82,7 +89,8 @@ public class Algorithms {
                                                                    int integrationPoint,
                                                                    double detJ,
                                                                    Element4x2D element) {
-        record CoefficientIdsOfIntegrationPoint(int IP, int ksi, int eta) { }
+        record CoefficientIdsOfIntegrationPoint(int IP, int ksi, int eta) {
+        }
         List<CoefficientIdsOfIntegrationPoint> points;
 
         if (element.getIntegrationScheme() == IntegrationScheme.INTEGRATION_SCHEME_1N) {
@@ -158,7 +166,7 @@ public class Algorithms {
         element.getIdList().forEach(id -> nodes.add(grid.getNodes().get(id - 1)));
 
         RealMatrix hbcMatrix = new Array2DRowRealMatrix(4, 4);
-        RealVector pMatrix = new ArrayRealVector(4);
+        RealVector pVector = new ArrayRealVector(4);
 
         double detJ;
         if (nodes.get(0).getBoundaryCondition() == nodes.get(1).getBoundaryCondition() &&
@@ -167,8 +175,12 @@ public class Algorithms {
             hbcMatrix = hbcMatrix.add(
                 new Array2DRowRealMatrix(
                     calculateSideHBC(detJ, alpha, Side.BOTTOM, universalElement)));
-            pMatrix = pMatrix.add(new ArrayRealVector(
+            pVector = pVector.add(new ArrayRealVector(
                 calculateSideP(detJ, alpha, t, Side.BOTTOM, universalElement)));
+            log.debug("Hbc matrix of bottom side:\n{}\n",
+                      MatrixUtils.matrixToString(hbcMatrix.getData()));
+            log.debug("pMatrix of bottom side:\n{}\n",
+                      Arrays.toString(pVector.toArray()));
         }
         if (nodes.get(1).getBoundaryCondition() == nodes.get(2).getBoundaryCondition() &&
             nodes.get(1).getBoundaryCondition() != 0) { //prawa
@@ -176,8 +188,12 @@ public class Algorithms {
             hbcMatrix = hbcMatrix.add(
                 new Array2DRowRealMatrix(
                     calculateSideHBC(detJ, alpha, Side.RIGHT, universalElement)));
-            pMatrix = pMatrix.add(new ArrayRealVector(
+            pVector = pVector.add(new ArrayRealVector(
                 calculateSideP(detJ, alpha, t, Side.RIGHT, universalElement)));
+            log.debug("Hbc matrix of right side:\n{}\n",
+                      MatrixUtils.matrixToString(hbcMatrix.getData()));
+            log.debug("pMatrix of right side:\n{}\n",
+                      Arrays.toString(pVector.toArray()));
         }
         if (nodes.get(2).getBoundaryCondition() == nodes.get(3).getBoundaryCondition() &&
             nodes.get(2).getBoundaryCondition() != 0) { //gorna
@@ -185,8 +201,12 @@ public class Algorithms {
             hbcMatrix = hbcMatrix.add(
                 new Array2DRowRealMatrix(
                     calculateSideHBC(detJ, alpha, Side.TOP, universalElement)));
-            pMatrix = pMatrix.add(new ArrayRealVector(
+            pVector = pVector.add(new ArrayRealVector(
                 calculateSideP(detJ, alpha, t, Side.TOP, universalElement)));
+            log.debug("Hbc matrix of top side:\n{}\n",
+                      MatrixUtils.matrixToString(hbcMatrix.getData()));
+            log.debug("pMatrix of top side:\n{}\n",
+                      Arrays.toString(pVector.toArray()));
         }
         if (nodes.get(3).getBoundaryCondition() == nodes.get(0).getBoundaryCondition() &&
             nodes.get(3).getBoundaryCondition() != 0) { //lewa
@@ -194,10 +214,14 @@ public class Algorithms {
             hbcMatrix = hbcMatrix.add(
                 new Array2DRowRealMatrix(
                     calculateSideHBC(detJ, alpha, Side.LEFT, universalElement)));
-            pMatrix = pMatrix.add(new ArrayRealVector(
+            pVector = pVector.add(new ArrayRealVector(
                 calculateSideP(detJ, alpha, t, Side.LEFT, universalElement)));
+            log.debug("Hbc matrix of left side:\n{}\n",
+                      MatrixUtils.matrixToString(hbcMatrix.getData()));
+            log.debug("pMatrix of left side:\n{}\n",
+                      Arrays.toString(pVector.toArray()));
         }
-        return Map.of("HBC", hbcMatrix.getData(), "P", pMatrix.toArray());
+        return Map.of("HBC", hbcMatrix.getData(), "P", pVector.toArray());
     }
 
     public static double[][] calculateSideHBC(double detJ, double alpha, short side,
@@ -238,6 +262,6 @@ public class Algorithms {
 
     private static double calculateDetJ(Node x1, Node x2) {
         return Math.sqrt(Math.pow(x2.getX() - x1.getX(), 2) +
-                             Math.pow((x1.getY() - x2.getY()), 2)) / 2.0;
+                         Math.pow((x1.getY() - x2.getY()), 2)) / 2.0;
     }
 }

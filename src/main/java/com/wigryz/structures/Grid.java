@@ -2,6 +2,7 @@ package com.wigryz.structures;
 
 import com.wigryz.algorithms.Algorithms;
 import com.wigryz.utilities.Configuration;
+import com.wigryz.utilities.MatrixUtils;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -11,17 +12,23 @@ import org.apache.commons.math3.linear.DecompositionSolver;
 import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.DoubleSummaryStatistics;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Getter
 @Setter
 @AllArgsConstructor
 public class Grid {
+
+    private static final Logger log = LogManager.getLogger();
 
     private double height; //height of table
     private double width; //width of table
@@ -107,19 +114,32 @@ public class Grid {
     }
 
     public void calculate(Element4x2D element) {
+        log.debug("Started calculating grid.");
         for (int i = 0; i < getNE(); i++) {
+            log.debug("\nElement with id {}: {}\n", i, elements.get(i));
+            log.debug("Nodes:\n{}",
+                      elements.get(i).getIdList().stream()
+                              .map(id -> getNodes().get(id - 1)).map(Node::toString)
+                              .collect(Collectors.joining("\n")));
             double[][] hLocal = new double[4][4];
             double[][] cLocal = new double[4][4];
             for (int j = 0; j < element.getNumberOfPoints(); j++) {
+                log.debug("Integration point number {}.", j);
                 double[][] jacobianMatrix = new double[2][2];
                 double[][] inverseJacobianMatrix = new double[2][2];
                 double detJ = Algorithms.jacobian(i, j, jacobianMatrix, inverseJacobianMatrix,
                                                   element, this);
-                Map<String, double[][]> hAndC = 
+                log.debug("detJ: {}\n", detJ);
+                log.debug("Jacobian matrix:\n{}\n",
+                          MatrixUtils.matrixToString(jacobianMatrix));
+                log.debug("Inverted jacobian matrix:\n{}\n",
+                          MatrixUtils.matrixToString(inverseJacobianMatrix));
+                Map<String, double[][]> hAndC =
                     Algorithms.calculateHAndCOfIntPoint(inverseJacobianMatrix, j, detJ, element);
-                
                 double[][] hOfIntegralPoint = hAndC.get("H");
                 double[][] cOfIntegralPoint = hAndC.get("C");
+                log.debug("H matrix:\n{}\n", MatrixUtils.matrixToString(hOfIntegralPoint));
+                log.debug("C matrix:\n{}\n", MatrixUtils.matrixToString(cOfIntegralPoint));
                 for (int k = 0; k < hLocal.length; k++) {
                     for (int l = 0; l < hLocal[k].length; l++) {
                         hLocal[k][l] += hOfIntegralPoint[k][l];
@@ -131,6 +151,10 @@ public class Grid {
                 Algorithms.calculateHbcAndP(this, i, Configuration.getInstance().alfa(),
                                             Configuration.getInstance().ambientTemperature(),
                                             element);
+            log.debug("Hbc matrix:\n{}\n",
+                      MatrixUtils.matrixToString((double[][]) hbcAndP.get("HBC")));
+            log.debug("P vector:\n{}\n", Arrays.toString((double[]) hbcAndP.get("P")));
+
             getElements().get(i).setH(hLocal);
             getElements().get(i).setC(cLocal);
             getElements().get(i).setHbc((double[][]) hbcAndP.get("HBC"));
@@ -165,8 +189,8 @@ public class Grid {
 
         RealMatrix hDash = hGlobalMatrix.add(cGlobalMatrix.scalarMultiply(1 / dT));
         RealVector pDash = pGlobalVector.add(cGlobalMatrix.scalarMultiply(1 / dT)
-                                               .multiply(t0)
-                                               .getColumnVector(0));
+                                                          .multiply(t0)
+                                                          .getColumnVector(0));
 
         DecompositionSolver solver = new LUDecomposition(hDash).getSolver();
         RealVector result = solver.solve(pDash);
@@ -183,10 +207,10 @@ public class Grid {
                                     .stream()
                                     .mapToDouble(Node::getTemperature)
                                     .toArray();
-        int i=1;
-        for(double temp : temperatures) {
+        int i = 1;
+        for (double temp : temperatures) {
             System.out.printf("%.5f ", temp);
-            if(i % nB == 0)
+            if (i % nB == 0)
                 System.out.println();
             i++;
         }
