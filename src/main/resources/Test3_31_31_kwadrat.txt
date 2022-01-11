@@ -8,7 +8,7 @@ Density 7800
 SpecificHeat 700
 Nodes number 961
 Elements number 900
-integrationScheme 1
+integrationScheme 2
 *Node
       1,  0.100000001, 0.00499999989
       2, 0.0966666639, 0.00499999989

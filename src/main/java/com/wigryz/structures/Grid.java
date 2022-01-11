@@ -67,7 +67,31 @@ public class Grid {
         aggregate();
     }
 
+    @Deprecated
+    public Grid(Configuration configuration, boolean fromFile) {
+        log.info("Configuration:\n{}", configuration);
+        this.height = configuration.heightOfGrid();
+        this.width = configuration.widthOfGrid();
+        this.nH = configuration.numberOfNodesOnHeight();
+        this.nB = configuration.numberOfNodesOnWidth();
+        nodes = new ArrayList<>();
+        elements = new ArrayList<>();
+        nN = nH * nB;
+        nE = (nH - 1) * (nB - 1);
+        dx = width / (nB - 1);
+        dy = height / (nH - 1);
+        globalH = new double[nN][nN];
+        globalC = new double[nN][nN];
+        globalP = new double[nN];
+        createElement();
+        createNodes();
+
+        calculate(new Element4x2D(configuration.integrationScheme()));
+        aggregate();
+    }
+
     public Grid(Configuration configuration) {
+        log.info("Configuration:\n{}", configuration);
         nodes = configuration.nodes();
         elements = configuration.elements();
         nN = configuration.numberOfNodes();
@@ -114,32 +138,32 @@ public class Grid {
     }
 
     public void calculate(Element4x2D element) {
-        log.debug("Started calculating grid.");
+        log.info("Started calculating grid.");
         for (int i = 0; i < getNE(); i++) {
-            log.debug("\nElement with id {}: {}\n", i, elements.get(i));
-            log.debug("Nodes:\n{}",
-                      elements.get(i).getIdList().stream()
-                              .map(id -> getNodes().get(id - 1)).map(Node::toString)
-                              .collect(Collectors.joining("\n")));
+            log.info("\nElement with id {}:\n{}\n", i, elements.get(i));
+            log.info("Nodes:\n{}",
+                     elements.get(i).getIdList().stream()
+                             .map(id -> getNodes().get(id - 1)).map(Node::toString)
+                             .collect(Collectors.joining("\n")));
             double[][] hLocal = new double[4][4];
             double[][] cLocal = new double[4][4];
             for (int j = 0; j < element.getNumberOfPoints(); j++) {
-                log.debug("Integration point number {}.", j);
+                log.info("Integration point number {}.", j);
                 double[][] jacobianMatrix = new double[2][2];
                 double[][] inverseJacobianMatrix = new double[2][2];
                 double detJ = Algorithms.jacobian(i, j, jacobianMatrix, inverseJacobianMatrix,
                                                   element, this);
-                log.debug("detJ: {}\n", detJ);
-                log.debug("Jacobian matrix:\n{}\n",
-                          MatrixUtils.matrixToString(jacobianMatrix));
-                log.debug("Inverted jacobian matrix:\n{}\n",
-                          MatrixUtils.matrixToString(inverseJacobianMatrix));
+                log.info("detJ: {}\n", detJ);
+                log.info("Jacobian matrix:\n{}\n",
+                         MatrixUtils.matrixToString(jacobianMatrix));
+                log.info("Inverted jacobian matrix:\n{}\n",
+                         MatrixUtils.matrixToString(inverseJacobianMatrix));
                 Map<String, double[][]> hAndC =
                     Algorithms.calculateHAndCOfIntPoint(inverseJacobianMatrix, j, detJ, element);
                 double[][] hOfIntegralPoint = hAndC.get("H");
                 double[][] cOfIntegralPoint = hAndC.get("C");
-                log.debug("H matrix:\n{}\n", MatrixUtils.matrixToString(hOfIntegralPoint));
-                log.debug("C matrix:\n{}\n", MatrixUtils.matrixToString(cOfIntegralPoint));
+                log.info("H matrix:\n{}\n", MatrixUtils.matrixToString(hOfIntegralPoint));
+                log.info("C matrix:\n{}\n", MatrixUtils.matrixToString(cOfIntegralPoint));
                 for (int k = 0; k < hLocal.length; k++) {
                     for (int l = 0; l < hLocal[k].length; l++) {
                         hLocal[k][l] += hOfIntegralPoint[k][l];
@@ -151,9 +175,9 @@ public class Grid {
                 Algorithms.calculateHbcAndP(this, i, Configuration.getInstance().alfa(),
                                             Configuration.getInstance().ambientTemperature(),
                                             element);
-            log.debug("Hbc matrix:\n{}\n",
-                      MatrixUtils.matrixToString((double[][]) hbcAndP.get("HBC")));
-            log.debug("P vector:\n{}\n", Arrays.toString((double[]) hbcAndP.get("P")));
+            log.info("Hbc matrix:\n{}\n",
+                     MatrixUtils.matrixToString((double[][]) hbcAndP.get("HBC")));
+            log.info("P vector:\n{}\n", Arrays.toString((double[]) hbcAndP.get("P")));
 
             getElements().get(i).setH(hLocal);
             getElements().get(i).setC(cLocal);
@@ -202,22 +226,27 @@ public class Grid {
     }
 
     public void printTemperatures() {
-        System.out.println("\n\n\nTemperature after " + currentTime + " seconds:");
+        log.warn(String.format("Temperature after %d seconds:%n", currentTime));
         double[] temperatures = this.getNodes()
                                     .stream()
                                     .mapToDouble(Node::getTemperature)
                                     .toArray();
         int i = 1;
+
+        StringBuilder temperaturesGrid = new StringBuilder();
+        temperaturesGrid.append("\n");
         for (double temp : temperatures) {
-            System.out.printf("%.5f ", temp);
+            temperaturesGrid.append(String.format("%.5f ", temp));
             if (i % nB == 0)
-                System.out.println();
+                temperaturesGrid.append("\n");
             i++;
         }
         DoubleSummaryStatistics summary = this.getNodes()
                                               .stream()
                                               .mapToDouble(Node::getTemperature)
                                               .summaryStatistics();
-        System.out.printf("%nMin temp: %.5f Max temp: %.5f", summary.getMin(), summary.getMax());
+        log.info(temperaturesGrid.toString());
+        log.warn(String.format("%nMin temp: %.5f Max temp: %.5f%n%n%n",
+                               summary.getMin(), summary.getMax()));
     }
 }

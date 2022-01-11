@@ -3,6 +3,8 @@ package com.wigryz.utilities;
 import com.wigryz.algorithms.IntegrationScheme;
 import com.wigryz.structures.Element;
 import com.wigryz.structures.Node;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -16,6 +18,8 @@ import java.util.Scanner;
 
 public class Configuration {
     private static Configuration instance;
+
+    private static final Logger log = LogManager.getLogger();
 
     private double initialTemperature;      // temperatura poczatkowa w wezlach
     private int simulationTime;             // czas symulacji [s]
@@ -46,9 +50,10 @@ public class Configuration {
         }
         return instance;
     }
-
+    @Deprecated
     public void loadConfigurationFromFile() {
         URL url = getClass().getClassLoader().getResource("init.txt");
+        log.info("Reading configuration from file: {}", url);
         try (Scanner in = new Scanner(new File(Objects.requireNonNull(url).toURI()))) {
             in.next();
             initialTemperature = in.nextDouble();
@@ -106,6 +111,7 @@ public class Configuration {
 
     public void loadInitDataFromFile(String path) {
         URL url = getClass().getClassLoader().getResource(path);
+        log.info("Reading configuration from file: {}", url);
         try (Scanner in = new Scanner(new File(Objects.requireNonNull(url).toURI()))) {
             in.next();
             simulationTime = in.nextInt();
@@ -135,15 +141,18 @@ public class Configuration {
             in.nextLine();
             in.nextLine();
             readNodes(numberOfNodes, in);
+            log.info("Read {}/{} nodes from file.", nodes.size(), numberOfNodes);
             in.nextLine();
             readElements(numberOfElements, in);
+            log.info("Read {}/{} nodes from file.", elements.size(), numberOfElements);
             in.nextLine();
             readBoundaryConditions(in);
+            log.info("Read boundary conditions from file.");
         } catch (FileNotFoundException e) {
-            System.out.println("Failed during opening init file.");
+            log.info("Failed during opening init file.");
             System.exit(1);
         } catch (NoSuchElementException e) {
-            System.out.println("Failed during reading init file.");
+            log.info("Failed during reading init file.");
             System.exit(1);
         } catch (URISyntaxException e) {
             e.printStackTrace();
@@ -252,4 +261,26 @@ public class Configuration {
         return elements;
     }
 
+    @Override
+    public String toString() {
+        return "Configuration{" +
+               "initialTemperature=" + initialTemperature +
+               ", simulationTime=" + simulationTime +
+               ", simulationStepTime=" + simulationStepTime +
+               ", ambientTemperature=" + ambientTemperature +
+               ", alfa=" + alfa +
+               ", heightOfGrid=" + heightOfGrid +
+               ", widthOfGrid=" + widthOfGrid +
+               ", numberOfNodesOnHeight=" + numberOfNodesOnHeight +
+               ", numberOfNodesOnWidth=" + numberOfNodesOnWidth +
+               ", specificHeat=" + specificHeat +
+               ", conductivity=" + conductivity +
+               ", density=" + density +
+               ", integrationScheme=" + integrationScheme +
+               ", numberOfNodes=" + numberOfNodes +
+               ", numberOfElements=" + numberOfElements +
+               ", nodes=" + nodes +
+               ", elements=" + elements +
+               '}';
+    }
 }

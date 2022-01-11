@@ -78,9 +78,9 @@ public class Algorithms {
         inverseJacobian[1][0] = -jacobian[1][0];
         inverseJacobian[1][1] = jacobian[0][0];
 
-        for (int k = 0; k < jacobian.length; k++)
-            for (int h = 0; h < jacobian[0].length; h++)
-                inverseJacobian[k][h] = 1d / detJ * jacobian[k][h];
+        for (int i = 0; i < jacobian.length; i++)
+            for (int j = 0; j < jacobian[0].length; j++)
+                inverseJacobian[i][j] = (1.0 / detJ) * inverseJacobian[i][j];
 
         return detJ;
     }
@@ -172,54 +172,62 @@ public class Algorithms {
         if (nodes.get(0).getBoundaryCondition() == nodes.get(1).getBoundaryCondition() &&
             nodes.get(0).getBoundaryCondition() != 0) { //dolna
             detJ = calculateDetJ(nodes.get(0), nodes.get(1));
-            hbcMatrix = hbcMatrix.add(
-                new Array2DRowRealMatrix(
-                    calculateSideHBC(detJ, alpha, Side.BOTTOM, universalElement)));
-            pVector = pVector.add(new ArrayRealVector(
-                calculateSideP(detJ, alpha, t, Side.BOTTOM, universalElement)));
-            log.debug("Hbc matrix of bottom side:\n{}\n",
-                      MatrixUtils.matrixToString(hbcMatrix.getData()));
-            log.debug("pMatrix of bottom side:\n{}\n",
-                      Arrays.toString(pVector.toArray()));
+            log.info("detJ of bottom side: {}\n", detJ);
+            RealMatrix hbcTemp = new Array2DRowRealMatrix(
+                calculateSideHBC(detJ, alpha, Side.BOTTOM, universalElement));
+            RealVector pTemp = new ArrayRealVector(
+                calculateSideP(detJ, alpha, t, Side.BOTTOM, universalElement));
+            hbcMatrix = hbcMatrix.add(hbcTemp);
+            pVector = pVector.add(pTemp);
+            log.info("Hbc matrix of bottom side:\n{}\n",
+                     MatrixUtils.matrixToString(hbcTemp.getData()));
+            log.info("pMatrix of bottom side:\n{}\n",
+                     Arrays.toString(pTemp.toArray()));
         }
         if (nodes.get(1).getBoundaryCondition() == nodes.get(2).getBoundaryCondition() &&
             nodes.get(1).getBoundaryCondition() != 0) { //prawa
             detJ = calculateDetJ(nodes.get(1), nodes.get(2));
-            hbcMatrix = hbcMatrix.add(
-                new Array2DRowRealMatrix(
-                    calculateSideHBC(detJ, alpha, Side.RIGHT, universalElement)));
-            pVector = pVector.add(new ArrayRealVector(
-                calculateSideP(detJ, alpha, t, Side.RIGHT, universalElement)));
-            log.debug("Hbc matrix of right side:\n{}\n",
-                      MatrixUtils.matrixToString(hbcMatrix.getData()));
-            log.debug("pMatrix of right side:\n{}\n",
-                      Arrays.toString(pVector.toArray()));
+            log.info("detJ of right side: {}\n", detJ);
+            Array2DRowRealMatrix hbcTemp = new Array2DRowRealMatrix(
+                calculateSideHBC(detJ, alpha, Side.RIGHT, universalElement));
+            RealVector pTemp = new ArrayRealVector(
+                calculateSideP(detJ, alpha, t, Side.RIGHT, universalElement));
+            hbcMatrix = hbcMatrix.add(hbcTemp);
+            pVector = pVector.add(pTemp);
+            log.info("Hbc matrix of right side:\n{}\n",
+                     MatrixUtils.matrixToString(hbcTemp.getData()));
+            log.info("pMatrix of right side:\n{}\n",
+                     Arrays.toString(pTemp.toArray()));
         }
         if (nodes.get(2).getBoundaryCondition() == nodes.get(3).getBoundaryCondition() &&
             nodes.get(2).getBoundaryCondition() != 0) { //gorna
             detJ = calculateDetJ(nodes.get(3), nodes.get(2));
-            hbcMatrix = hbcMatrix.add(
-                new Array2DRowRealMatrix(
-                    calculateSideHBC(detJ, alpha, Side.TOP, universalElement)));
-            pVector = pVector.add(new ArrayRealVector(
-                calculateSideP(detJ, alpha, t, Side.TOP, universalElement)));
-            log.debug("Hbc matrix of top side:\n{}\n",
-                      MatrixUtils.matrixToString(hbcMatrix.getData()));
-            log.debug("pMatrix of top side:\n{}\n",
-                      Arrays.toString(pVector.toArray()));
+            log.info("detJ of top side: {}\n", detJ);
+            Array2DRowRealMatrix hbcTemp = new Array2DRowRealMatrix(
+                calculateSideHBC(detJ, alpha, Side.TOP, universalElement));
+            RealVector pTemp = new ArrayRealVector(
+                calculateSideP(detJ, alpha, t, Side.TOP, universalElement));
+            hbcMatrix = hbcMatrix.add(hbcTemp);
+            pVector = pVector.add(pTemp);
+            log.info("Hbc matrix of top side:\n{}\n",
+                     MatrixUtils.matrixToString(hbcTemp.getData()));
+            log.info("pMatrix of top side:\n{}\n",
+                     Arrays.toString(pTemp.toArray()));
         }
         if (nodes.get(3).getBoundaryCondition() == nodes.get(0).getBoundaryCondition() &&
             nodes.get(3).getBoundaryCondition() != 0) { //lewa
             detJ = calculateDetJ(nodes.get(0), nodes.get(3));
-            hbcMatrix = hbcMatrix.add(
-                new Array2DRowRealMatrix(
-                    calculateSideHBC(detJ, alpha, Side.LEFT, universalElement)));
-            pVector = pVector.add(new ArrayRealVector(
-                calculateSideP(detJ, alpha, t, Side.LEFT, universalElement)));
-            log.debug("Hbc matrix of left side:\n{}\n",
-                      MatrixUtils.matrixToString(hbcMatrix.getData()));
-            log.debug("pMatrix of left side:\n{}\n",
-                      Arrays.toString(pVector.toArray()));
+            log.info("detJ of left side: {}\n", detJ);
+            Array2DRowRealMatrix hbcTemp = new Array2DRowRealMatrix(
+                calculateSideHBC(detJ, alpha, Side.LEFT, universalElement));
+            RealVector pTemp = new ArrayRealVector(
+                calculateSideP(detJ, alpha, t, Side.LEFT, universalElement));
+            hbcMatrix = hbcMatrix.add(hbcTemp);
+            pVector = pVector.add(pTemp);
+            log.info("Hbc matrix of left side:\n{}\n",
+                     MatrixUtils.matrixToString(hbcTemp.getData()));
+            log.info("pMatrix of left side:\n{}\n",
+                     Arrays.toString(pTemp.toArray()));
         }
         return Map.of("HBC", hbcMatrix.getData(), "P", pVector.toArray());
     }

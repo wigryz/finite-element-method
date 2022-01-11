@@ -1,17 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="DEBUG">
+<Configuration>
+    <Properties>
+        <property name="timeOfRun">${date:HH-mm-ss}</property>
+    </Properties>
     <Appenders>
         <Console name="ConsoleAppender" target="SYSTEM_OUT">
-            <PatternLayout pattern="%d [%t] %-5level %logger{36} - %msg%n%throwable"/>
+            <PatternLayout pattern="%d - %msg%n%throwable"/>
         </Console>
-        <File name="FileAppender" fileName="target/logs.log">
-            <PatternLayout pattern="%d [%t] %-5level %logger{36} - %msg%n%throwable"/>
-        </File>
+        <RollingFile name="RollingFile" fileName="target/logs/logs-${timeOfRun}.log"
+                     filePattern="logs/compressed-logs-$${date:MM-dd}.log.gz">
+            <PatternLayout pattern="%d - %msg%n%throwable"/>
+            <Policies>
+                <OnStartupTriggeringPolicy minSize="1"/>
+            </Policies>
+            <DefaultRolloverStrategy max="20"/>
+        </RollingFile>
     </Appenders>
     <Loggers>
-        <Root level="DEBUG">
+        <Root level="WARN">
             <AppenderRef ref="ConsoleAppender"/>
-            <AppenderRef ref="FileAppender"/>
+            <AppenderRef ref="RollingFile"/>
         </Root>
     </Loggers>
 </Configuration>
