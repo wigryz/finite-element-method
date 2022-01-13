@@ -126,10 +126,10 @@ public class Algorithms {
             dNidy[j] += inverseJacobian[1][1] * dNdEta[integrationPoint][j];
         }
 
-        RealMatrix xMatrix = new Array2DRowRealMatrix(dNidx);
-        RealMatrix resultX = xMatrix.multiply(xMatrix.transpose());
-        RealMatrix yMatrix = new Array2DRowRealMatrix(dNidy);
-        RealMatrix resultY = yMatrix.multiply(yMatrix.transpose());
+        RealVector xVector = new ArrayRealVector(dNidx);
+        RealMatrix resultX = xVector.outerProduct(xVector);
+        RealVector yVector = new ArrayRealVector(dNidy);
+        RealMatrix resultY = yVector.outerProduct(yVector);
         double[][] h = resultX.add(resultY)
                               .scalarMultiply(conductivity)
                               .scalarMultiply(detJ)
@@ -160,7 +160,7 @@ public class Algorithms {
     }
 
     public static Map<String, Object> calculateHbcAndP(Grid grid, int elementId, double alpha,
-                                                       double t, Element4x2D universalElement) {
+                                                       double temperature, Element4x2D universalElement) {
         Element element = grid.getElements().get(elementId);
         List<Node> nodes = new ArrayList<>(element.getIdList().size());
         element.getIdList().forEach(id -> nodes.add(grid.getNodes().get(id - 1)));
@@ -176,7 +176,7 @@ public class Algorithms {
             RealMatrix hbcTemp = new Array2DRowRealMatrix(
                 calculateSideHBC(detJ, alpha, Side.BOTTOM, universalElement));
             RealVector pTemp = new ArrayRealVector(
-                calculateSideP(detJ, alpha, t, Side.BOTTOM, universalElement));
+                calculateSideP(detJ, alpha, temperature, Side.BOTTOM, universalElement));
             hbcMatrix = hbcMatrix.add(hbcTemp);
             pVector = pVector.add(pTemp);
             log.info("Hbc matrix of bottom side:\n{}\n",
@@ -191,7 +191,7 @@ public class Algorithms {
             Array2DRowRealMatrix hbcTemp = new Array2DRowRealMatrix(
                 calculateSideHBC(detJ, alpha, Side.RIGHT, universalElement));
             RealVector pTemp = new ArrayRealVector(
-                calculateSideP(detJ, alpha, t, Side.RIGHT, universalElement));
+                calculateSideP(detJ, alpha, temperature, Side.RIGHT, universalElement));
             hbcMatrix = hbcMatrix.add(hbcTemp);
             pVector = pVector.add(pTemp);
             log.info("Hbc matrix of right side:\n{}\n",
@@ -206,7 +206,7 @@ public class Algorithms {
             Array2DRowRealMatrix hbcTemp = new Array2DRowRealMatrix(
                 calculateSideHBC(detJ, alpha, Side.TOP, universalElement));
             RealVector pTemp = new ArrayRealVector(
-                calculateSideP(detJ, alpha, t, Side.TOP, universalElement));
+                calculateSideP(detJ, alpha, temperature, Side.TOP, universalElement));
             hbcMatrix = hbcMatrix.add(hbcTemp);
             pVector = pVector.add(pTemp);
             log.info("Hbc matrix of top side:\n{}\n",
@@ -221,7 +221,7 @@ public class Algorithms {
             Array2DRowRealMatrix hbcTemp = new Array2DRowRealMatrix(
                 calculateSideHBC(detJ, alpha, Side.LEFT, universalElement));
             RealVector pTemp = new ArrayRealVector(
-                calculateSideP(detJ, alpha, t, Side.LEFT, universalElement));
+                calculateSideP(detJ, alpha, temperature, Side.LEFT, universalElement));
             hbcMatrix = hbcMatrix.add(hbcTemp);
             pVector = pVector.add(pTemp);
             log.info("Hbc matrix of left side:\n{}\n",
@@ -253,7 +253,7 @@ public class Algorithms {
                      .getData();
     }
 
-    private static double[] calculateSideP(double detJ, double alpha, double t, short side,
+    private static double[] calculateSideP(double detJ, double alpha, double temperature, short side,
                                            Element4x2D element) {
         IntegrationScheme scheme = element.getIntegrationScheme();
         double[][] nArray = element.getSides()[side].getN();
@@ -262,7 +262,7 @@ public class Algorithms {
 
         for (int i = 0; i < scheme.k.size(); i++) {
             RealVector nRow = new ArrayRealVector(nArray[i]);
-            result = result.add(nRow.mapMultiply(t).mapMultiply(
+            result = result.add(nRow.mapMultiply(temperature).mapMultiply(
                 element.getIntegrationScheme().getCoefficients().get(i)));
         }
         return result.mapMultiply(detJ).mapMultiply(alpha).toArray();

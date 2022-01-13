@@ -9,8 +9,6 @@ import java.util.Arrays;
 public class Element4x2D {
 
     IntegrationScheme integrationScheme;
-
-    private double coord = 1d / Math.sqrt(3);
     private double[][] dNdEta;
     private double[][] dNdKsi;
     private double[][] n;
