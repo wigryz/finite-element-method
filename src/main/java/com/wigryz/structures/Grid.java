@@ -205,16 +205,15 @@ public class Grid {
 
         RealMatrix hGlobalMatrix = new Array2DRowRealMatrix(this.getGlobalH(), false);
         RealMatrix cGlobalMatrix = new Array2DRowRealMatrix(this.getGlobalC(), false);
+//        RealMatrix cGlobalMatrix = new Array2DRowRealMatrix(this.nN, this.nN);
         RealVector pGlobalVector = new ArrayRealVector(this.getGlobalP());
 
-        RealMatrix t0 = new Array2DRowRealMatrix(getNodes().stream()
-                                                           .mapToDouble(Node::getTemperature)
-                                                           .toArray());
-
+        RealVector t0 = new ArrayRealVector(getNodes().stream()
+                                                      .mapToDouble(Node::getTemperature)
+                                                      .toArray());
         RealMatrix hDash = hGlobalMatrix.add(cGlobalMatrix.scalarMultiply(1 / dT));
         RealVector pDash = pGlobalVector.add(cGlobalMatrix.scalarMultiply(1 / dT)
-                                                          .multiply(t0)
-                                                          .getColumnVector(0));
+                                                          .operate(t0));
 
         DecompositionSolver solver = new LUDecomposition(hDash).getSolver();
         RealVector result = solver.solve(pDash);
