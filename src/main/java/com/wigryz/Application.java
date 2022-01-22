@@ -10,10 +10,10 @@ public class Application {
         Configuration conf = Configuration.getInstance();
 //        conf.loadConfigurationFromFile();
 //        conf.loadConfigurationHardcoded();
-        conf.loadInitDataFromFile("Test1_4_4.txt");
+//        conf.loadInitDataFromFile("Test1_4_4.txt");
 //        conf.loadInitDataFromFile("Test2_4_4_MixGrid.txt");
 //        conf.loadInitDataFromFile("Test3_31_31_kwadrat.txt");
-//        conf.loadInitDataFromFile("Test4_31_31_trapez.txt");
+        conf.loadInitDataFromFile("Test4_31_31_trapez.txt");
 
 //        Grid grid = new Grid(conf, true);
         Grid grid = new Grid(conf);

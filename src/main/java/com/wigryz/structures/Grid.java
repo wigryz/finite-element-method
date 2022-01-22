@@ -225,7 +225,7 @@ public class Grid {
     }
 
     public void printTemperatures() {
-        log.warn(String.format("Temperature after %d seconds:%n", currentTime));
+        log.warn(String.format("Temperature after %d seconds:", currentTime));
         double[] temperatures = this.getNodes()
                                     .stream()
                                     .mapToDouble(Node::getTemperature)
@@ -245,7 +245,7 @@ public class Grid {
                                               .mapToDouble(Node::getTemperature)
                                               .summaryStatistics();
         log.info(temperaturesGrid.toString());
-        log.warn(String.format("%nMin temp: %.5f Max temp: %.5f%n%n%n",
+        log.warn(String.format("Min temp: %.5f Max temp: %.5f%n",
                                summary.getMin(), summary.getMax()));
     }
 }

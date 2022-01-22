@@ -5,11 +5,11 @@
     </Properties>
     <Appenders>
         <Console name="ConsoleAppender" target="SYSTEM_OUT">
-            <PatternLayout pattern="%d - %msg%n%throwable"/>
+            <PatternLayout pattern="%msg%n%throwable"/>
         </Console>
         <RollingFile name="RollingFile" fileName="target/logs/logs-${timeOfRun}.log"
                      filePattern="logs/compressed-logs-$${date:MM-dd}.log.gz">
-            <PatternLayout pattern="%d - %msg%n%throwable"/>
+            <PatternLayout pattern="%msg%n%throwable"/>
             <Policies>
                 <OnStartupTriggeringPolicy minSize="1"/>
             </Policies>
@@ -17,7 +17,7 @@
         </RollingFile>
     </Appenders>
     <Loggers>
-        <Root level="INFO">
+        <Root level="warn">
             <AppenderRef ref="ConsoleAppender"/>
             <AppenderRef ref="RollingFile"/>
         </Root>
